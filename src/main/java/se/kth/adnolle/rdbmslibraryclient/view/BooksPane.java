@@ -16,6 +16,7 @@ import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
 
 public class BooksPane extends VBox {
 
+    private IViewListener controller;
     private TableView<Book> booksTable;
     private ObservableList<Book> booksInTable;
     private ComboBox<SearchMode> searchModeBox;
@@ -30,6 +31,10 @@ public class BooksPane extends VBox {
     void init() {
         booksInTable = FXCollections.observableArrayList();
 
+    }
+
+    public void setViewListener(IViewListener controller) {
+        this.controller = controller;
     }
 
 }
