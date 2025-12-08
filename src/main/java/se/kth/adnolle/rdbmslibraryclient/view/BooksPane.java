@@ -64,7 +64,7 @@ public class BooksPane extends VBox {
         searchButton = new Button("Search");
 
         // event handling (dispatch to controller)
-        searchButton.setOnAction(event -> {
+        searchButton.setOnAction(_ -> {
             String searchFor = searchField.getText();
             SearchMode mode = searchModeBox.getValue();
             controller.onSearchSelected(searchFor, mode);
@@ -80,6 +80,7 @@ public class BooksPane extends VBox {
         TableColumn<Book, String> titleCol = new TableColumn<>("Title");
         TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
         TableColumn<Book, Date> publishedCol = new TableColumn<>("Published");
+        //noinspection unchecked
         booksTable.getColumns().addAll(titleCol, isbnCol, publishedCol);
         // give title column some extra space
         titleCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.3));
@@ -120,7 +121,7 @@ public class BooksPane extends VBox {
         menuBar.getMenus().addAll(fileMenu, manageMenu);
 
         // TODO: add event handlers ...
-        addItem.setOnAction(event -> controller.onAddBookSelected());
+        addItem.setOnAction(_ -> controller.onAddBookSelected());
     }
 
     private void init() {

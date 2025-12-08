@@ -1,6 +1,5 @@
 package se.kth.adnolle.rdbmslibraryclient.controller;
 
-import javafx.stage.Stage;
 import static javafx.scene.control.Alert.AlertType.*;
 import java.util.List;
 import java.util.Optional;
@@ -12,12 +11,11 @@ import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 
 public class Controller implements IViewListener {
 
-    private final Stage primaryStage;
+    //private final Stage primaryStage;
     private final IBooksDb database;
     private final BooksPane view;
 
-    public Controller(Stage primaryStage, IBooksDb database, BooksPane view) {
-        this.primaryStage = primaryStage;
+    public Controller(IBooksDb database, BooksPane view) {
         this.database = database;
         this.view = view;
         view.setViewListener(this);
