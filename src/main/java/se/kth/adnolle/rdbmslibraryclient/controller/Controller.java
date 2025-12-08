@@ -2,8 +2,6 @@ package se.kth.adnolle.rdbmslibraryclient.controller;
 
 import javafx.stage.Stage;
 import static javafx.scene.control.Alert.AlertType.*;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import se.kth.adnolle.rdbmslibraryclient.model.Author;
