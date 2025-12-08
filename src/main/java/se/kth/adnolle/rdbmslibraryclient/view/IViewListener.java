@@ -19,5 +19,5 @@ public interface IViewListener {
     void onAddBookSelected();
 
     // Rate book
-    void onRateBookSelected();
+    void onRateBookSelected(Book selectedBook);
 }

@@ -10,6 +10,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,6 +54,13 @@ public class BooksPane extends VBox {
     public Optional<Book> showAddBookDialog(List<Author> authors, List<Genre> genres) {
         AddBookDialog addBookDialog = new AddBookDialog(authors, genres);
         return addBookDialog.showAndWait();
+    }
+
+    public Optional<Integer> showRateBookDialog(Book selectedBook) {
+        ChoiceDialog<Integer> cd = new ChoiceDialog<>(null,1,2,3,4,5);
+        cd.setTitle("Rate Book");
+        cd.setHeaderText("Choose a rating");
+        return cd.showAndWait();
     }
 
     private void initSearchView() {
@@ -120,8 +128,11 @@ public class BooksPane extends VBox {
         menuBar = new MenuBar();
         menuBar.getMenus().addAll(fileMenu, manageMenu);
 
-        // TODO: add event handlers ...
         addItem.setOnAction(_ -> controller.onAddBookSelected());
+        rateItem.setOnAction(_ -> {
+            Book selectedBook = booksTable.getSelectionModel().getSelectedItem();
+            controller.onRateBookSelected(selectedBook);
+        });
     }
 
     private void init() {

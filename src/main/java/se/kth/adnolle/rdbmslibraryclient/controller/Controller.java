@@ -76,8 +76,19 @@ public class Controller implements IViewListener {
     }
 
     @Override
-    public void onRateBookSelected() {
-
+    public void onRateBookSelected(Book selectedBook) {
+        if(selectedBook != null) {
+            Optional<Integer> rating = view.showRateBookDialog(selectedBook);
+            if(rating.isPresent()) {
+                try{
+                    database.rateBook(selectedBook.getBookId(), rating.get());
+                }
+                catch (Exception e) {
+                    view.showAlertAndWait("Database error.", ERROR);
+                }
+            }
+        }
+        else view.showAlertAndWait("Select a book to rate", INFORMATION);
     }
 
     @Override
