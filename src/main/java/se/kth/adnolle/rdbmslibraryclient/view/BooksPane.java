@@ -9,9 +9,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-
+import java.sql.Date;
 import se.kth.adnolle.rdbmslibraryclient.model.Book;
-import se.kth.adnolle.rdbmslibraryclient.model.IBooksDb;
 import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
 
 public class BooksPane extends VBox {
@@ -24,17 +23,93 @@ public class BooksPane extends VBox {
     private Button searchButton;
     private MenuBar menuBar;
 
-    public BooksPane() {
-        this.init();
+    public BooksPane() { this.init(); }
+
+    public void setViewListener(IViewListener controller) { this.controller = controller; }
+
+    private void initSearchView() {
+        searchField = new TextField();
+        searchField.setPromptText("Search for...");
+        searchModeBox = new ComboBox<>();
+        searchModeBox.getItems().addAll(SearchMode.values());
+        searchModeBox.setValue(SearchMode.Title);
+        searchButton = new Button("Search");
+
+        // event handling (dispatch to controller)
+        searchButton.setOnAction(event -> {
+            String searchFor = searchField.getText();
+            SearchMode mode = searchModeBox.getValue();
+            controller.onSearchSelected(searchFor, mode);
+        });
     }
 
-    void init() {
+    private void initBooksTable() {
+        booksTable = new TableView<>();
+        booksTable.setEditable(false); // don't allow user updates (yet)
+        booksTable.setPlaceholder(new Label("No rows to display"));
+
+        // define columns
+        TableColumn<Book, String> titleCol = new TableColumn<>("Title");
+        TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
+        TableColumn<Book, Date> publishedCol = new TableColumn<>("Published");
+        booksTable.getColumns().addAll(titleCol, isbnCol, publishedCol);
+        // give title column some extra space
+        titleCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.5));
+
+        // define how to fill data for each cell,
+        // get values from Book properties
+        titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
+        isbnCol.setCellValueFactory(new PropertyValueFactory<>("isbn"));
+        publishedCol.setCellValueFactory(new PropertyValueFactory<>("published"));
+
+        // associate the table view with the data
+        booksTable.setItems(booksInTable);
+    }
+
+    private void initMenus() {
+        Menu fileMenu = new Menu("File");
+        MenuItem exitItem = new MenuItem("Exit");
+        MenuItem connectItem = new MenuItem("Connect to Db");
+        MenuItem disconnectItem = new MenuItem("Disconnect");
+        fileMenu.getItems().addAll(exitItem, connectItem, disconnectItem);
+
+        Menu searchMenu = new Menu("Search");
+        MenuItem titleItem = new MenuItem("Title");
+        MenuItem isbnItem = new MenuItem("ISBN");
+        MenuItem authorItem = new MenuItem("Author");
+        searchMenu.getItems().addAll(titleItem, isbnItem, authorItem);
+
+        Menu manageMenu = new Menu("Manage");
+        MenuItem addItem = new MenuItem("Add");
+        MenuItem removeItem = new MenuItem("Remove");
+        MenuItem updateItem = new MenuItem("Update");
+        manageMenu.getItems().addAll(addItem, removeItem, updateItem);
+
+        menuBar = new MenuBar();
+        menuBar.getMenus().addAll(fileMenu, searchMenu, manageMenu);
+
+        // TODO: add event handlers ...
+    }
+
+    private void init() {
         booksInTable = FXCollections.observableArrayList();
 
-    }
+        // init views and event handlers
+        initBooksTable();
+        initSearchView();
+        initMenus();
 
-    public void setViewListener(IViewListener controller) {
-        this.controller = controller;
-    }
+        FlowPane bottomPane = new FlowPane();
+        bottomPane.setHgap(10);
+        bottomPane.setPadding(new Insets(10, 10, 10, 10));
+        bottomPane.getChildren().addAll(searchModeBox, searchField, searchButton);
 
+        BorderPane mainPane = new BorderPane();
+        mainPane.setCenter(booksTable);
+        mainPane.setBottom(bottomPane);
+        mainPane.setPadding(new Insets(10, 10, 10, 10));
+
+        this.getChildren().addAll(menuBar, mainPane);
+        VBox.setVgrow(mainPane, Priority.ALWAYS);
+    }
 }
