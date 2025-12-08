@@ -143,12 +143,12 @@ public class IBooksDbMockImpl implements IBooksDb {
 
     public IBooksDbMockImpl() {
         authors = Arrays.asList(
-                new Author(1, "Catherine Ricardo"),
-                new Author(2, "Susan Ullman"),
-                new Author(3, "Kazuo Ishiguro"),
-                new Author(4, "Margaret Atwood"),
-                new Author(5, "Douglas Stuart"),
-                new Author(6, "Douglas Coupland")
+                new Author(1, "Catherine Ricardo", Date.valueOf("1999-11-11")),
+                new Author(2, "Susan Ullman", Date.valueOf("1999-11-11")),
+                new Author(3, "Kazuo Ishiguro", Date.valueOf("1999-11-11")),
+                new Author(4, "Margaret Atwood", Date.valueOf("1999-11-11")),
+                new Author(5, "Douglas Stuart", Date.valueOf("1999-11-11")),
+                new Author(6, "Douglas Coupland", Date.valueOf("1999-11-11"))
         );
 
         genres = Arrays.asList(

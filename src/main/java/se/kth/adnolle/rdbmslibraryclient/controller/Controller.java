@@ -2,7 +2,11 @@ package se.kth.adnolle.rdbmslibraryclient.controller;
 
 import javafx.stage.Stage;
 import static javafx.scene.control.Alert.AlertType.*;
+
+import java.util.ArrayList;
 import java.util.List;
+
+import se.kth.adnolle.rdbmslibraryclient.model.Author;
 import se.kth.adnolle.rdbmslibraryclient.model.Book;
 import se.kth.adnolle.rdbmslibraryclient.model.IBooksDb;
 import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
@@ -68,7 +72,16 @@ public class Controller implements IViewListener {
     }
 
     @Override
-    public void onDetailsSelected() {
-
+    public void onAuthorDetailsSelected(Book selectedBook) {
+        if(selectedBook != null && !selectedBook.getAuthors().isEmpty()) {
+            List<Author> authors = selectedBook.getAuthors();
+            StringBuilder builder = new StringBuilder();
+            for(Author author : authors) {
+                builder.append(author.toString()).append("\n\n");
+            }
+            String headerInfo = "'" + selectedBook.getTitle() + "'" + " Authors:";
+            view.showAlertAndWait(builder.toString(), INFORMATION, "Author Information", headerInfo);
+        }
+        else view.showAlertAndWait("No book selected", ERROR);
     }
 }

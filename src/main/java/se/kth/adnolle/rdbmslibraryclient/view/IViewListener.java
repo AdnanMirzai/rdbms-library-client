@@ -1,5 +1,6 @@
 package se.kth.adnolle.rdbmslibraryclient.view;
 
+import se.kth.adnolle.rdbmslibraryclient.model.Book;
 import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
 
 public interface IViewListener {
@@ -18,5 +19,5 @@ public interface IViewListener {
     void onRateBookSelected();
 
     // Detailed info about book
-    void onDetailsSelected();
+    void onAuthorDetailsSelected(Book selectedBook);
 }

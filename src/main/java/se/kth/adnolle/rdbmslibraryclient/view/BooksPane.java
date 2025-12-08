@@ -82,6 +82,14 @@ public class BooksPane extends VBox {
         isbnCol.setCellValueFactory(new PropertyValueFactory<>("isbn"));
         publishedCol.setCellValueFactory(new PropertyValueFactory<>("published"));
 
+        // When double-click on row, show books author details
+        booksTable.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2 && !booksTable.getSelectionModel().isEmpty()) {
+                Book selectedBook = booksTable.getSelectionModel().getSelectedItem();
+                controller.onAuthorDetailsSelected(selectedBook);
+            }
+        });
+
         // associate the table view with the data
         booksTable.setItems(booksInTable);
     }
