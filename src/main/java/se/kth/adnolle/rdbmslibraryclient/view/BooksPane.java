@@ -54,7 +54,7 @@ public class BooksPane extends VBox {
         TableColumn<Book, Date> publishedCol = new TableColumn<>("Published");
         booksTable.getColumns().addAll(titleCol, isbnCol, publishedCol);
         // give title column some extra space
-        titleCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.5));
+        titleCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.3));
 
         // define how to fill data for each cell,
         // get values from Book properties
@@ -73,20 +73,15 @@ public class BooksPane extends VBox {
         MenuItem disconnectItem = new MenuItem("Disconnect");
         fileMenu.getItems().addAll(exitItem, connectItem, disconnectItem);
 
-        Menu searchMenu = new Menu("Search");
-        MenuItem titleItem = new MenuItem("Title");
-        MenuItem isbnItem = new MenuItem("ISBN");
-        MenuItem authorItem = new MenuItem("Author");
-        searchMenu.getItems().addAll(titleItem, isbnItem, authorItem);
-
         Menu manageMenu = new Menu("Manage");
         MenuItem addItem = new MenuItem("Add");
+        MenuItem rateItem = new MenuItem("Rate");
         MenuItem removeItem = new MenuItem("Remove");
         MenuItem updateItem = new MenuItem("Update");
-        manageMenu.getItems().addAll(addItem, removeItem, updateItem);
+        manageMenu.getItems().addAll(addItem, rateItem, removeItem, updateItem);
 
         menuBar = new MenuBar();
-        menuBar.getMenus().addAll(fileMenu, searchMenu, manageMenu);
+        menuBar.getMenus().addAll(fileMenu, manageMenu);
 
         // TODO: add event handlers ...
     }
