@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import se.kth.adnolle.rdbmslibraryclient.model.*;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.InsertException;
+import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
 import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 
