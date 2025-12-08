@@ -12,12 +12,12 @@ public interface IViewListener {
     // Search
     void onSearchSelected(String searchFor, SearchMode mode);
 
+    // Detailed info about Author
+    void onAuthorDetailsSelected(Book selectedBook);
+
     // Add book
     void onAddBookSelected();
 
     // Rate book
     void onRateBookSelected();
-
-    // Detailed info about book
-    void onAuthorDetailsSelected(Book selectedBook);
 }

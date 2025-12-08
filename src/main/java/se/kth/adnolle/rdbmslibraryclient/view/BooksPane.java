@@ -11,8 +11,11 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
+import se.kth.adnolle.rdbmslibraryclient.model.Author;
 import se.kth.adnolle.rdbmslibraryclient.model.Book;
+import se.kth.adnolle.rdbmslibraryclient.model.Genre;
 import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
 
 public class BooksPane extends VBox {
@@ -45,6 +48,11 @@ public class BooksPane extends VBox {
     public void displayBooks(List<Book> result) {
         booksInTable.clear();
         booksInTable.addAll(result);
+    }
+
+    public Optional<Book> showAddBookDialog(List<Author> authors, List<Genre> genres) {
+        AddBookDialog addBookDialog = new AddBookDialog(authors, genres);
+        return addBookDialog.showAndWait();
     }
 
     private void initSearchView() {
@@ -112,6 +120,7 @@ public class BooksPane extends VBox {
         menuBar.getMenus().addAll(fileMenu, manageMenu);
 
         // TODO: add event handlers ...
+        addItem.setOnAction(event -> controller.onAddBookSelected());
     }
 
     private void init() {

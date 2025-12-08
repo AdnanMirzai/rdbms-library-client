@@ -3,11 +3,10 @@ package se.kth.adnolle.rdbmslibraryclient.controller;
 import javafx.stage.Stage;
 import static javafx.scene.control.Alert.AlertType.*;
 import java.util.List;
+import java.util.Optional;
 
-import se.kth.adnolle.rdbmslibraryclient.model.Author;
-import se.kth.adnolle.rdbmslibraryclient.model.Book;
-import se.kth.adnolle.rdbmslibraryclient.model.IBooksDb;
-import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
+import se.kth.adnolle.rdbmslibraryclient.model.*;
+import se.kth.adnolle.rdbmslibraryclient.model.exceptions.InsertException;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
 import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 
@@ -28,6 +27,7 @@ public class Controller implements IViewListener {
     public void onSearchSelected(String searchFor, SearchMode mode) {
         if(searchFor == null || searchFor.isEmpty()) {
             view.showAlertAndWait("Enter a search string!", WARNING);
+            return;
         }
 
         try {
@@ -61,7 +61,20 @@ public class Controller implements IViewListener {
 
     @Override
     public void onAddBookSelected() {
-
+        try{
+            List<Author> authors = database.getAllAuthors();
+            List<Genre> genres = database.getAllGenres();
+            Optional<Book> createdBook = view.showAddBookDialog(authors, genres);
+            if(createdBook.isPresent()) {
+                try {
+                    database.addBook(createdBook.get(), createdBook.get().getAuthors(), createdBook.get().getGenres());
+                } catch (Exception e) {
+                    view.showAlertAndWait("Input correct information", ERROR);
+                }
+            }
+        } catch (Exception e) {
+            view.showAlertAndWait("Database error.", ERROR);
+        }
     }
 
     @Override
