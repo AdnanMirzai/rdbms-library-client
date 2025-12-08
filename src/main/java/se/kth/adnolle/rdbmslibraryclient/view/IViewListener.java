@@ -9,14 +9,14 @@ public interface IViewListener {
     void onDisconnectSelected();
 
     // Search
-    void onSearchSelected(String text, SearchMode mode);
+    void onSearchSelected(String searchFor, SearchMode mode);
 
     // Add book
-    void addBookSelected();
+    void onAddBookSelected();
 
     // Rate book
-    void rateBookSelected();
+    void onRateBookSelected();
 
     // Detailed info about book
-    void DetailsSelected();
+    void onDetailsSelected();
 }

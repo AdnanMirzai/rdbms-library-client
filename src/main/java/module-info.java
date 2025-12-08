@@ -5,6 +5,7 @@ module se.kth.adnolle.rdbmslibraryclient {
     requires javafx.graphics;
 
 
-    opens se.kth.adnolle.rdbmslibraryclient to javafx.fxml;
+    opens se.kth.adnolle.rdbmslibraryclient to javafx.base;
+    opens se.kth.adnolle.rdbmslibraryclient.model to javafx.base;
     exports se.kth.adnolle.rdbmslibraryclient;
 }

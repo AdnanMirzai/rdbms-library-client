@@ -1,6 +1,9 @@
 package se.kth.adnolle.rdbmslibraryclient.controller;
 
 import javafx.stage.Stage;
+import static javafx.scene.control.Alert.AlertType.*;
+import java.util.List;
+import se.kth.adnolle.rdbmslibraryclient.model.Book;
 import se.kth.adnolle.rdbmslibraryclient.model.IBooksDb;
 import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
@@ -20,6 +23,31 @@ public class Controller implements IViewListener {
     }
 
     @Override
+    public void onSearchSelected(String searchFor, SearchMode mode) {
+        if(searchFor == null || searchFor.isEmpty()) {
+            view.showAlertAndWait("Enter a search string!", WARNING);
+        }
+
+        try {
+            List<Book> result = switch (mode) {
+                case Title -> database.findBooksByTitle(searchFor);
+                case ISBN -> database.findBooksByIsbn(searchFor);
+                case Author -> database.findBooksByAuthorName(searchFor);
+                case Genre -> database.findBooksByGenre(searchFor);
+                case Rating -> database.findBooksByRating(searchFor);
+            };
+            if(result == null || result.isEmpty()) {
+                view.showAlertAndWait("No results found.", INFORMATION);
+            }
+            else view.displayBooks(result);
+
+        } catch (Exception e) {
+            view.showAlertAndWait("Database error.", ERROR);
+        }
+
+    }
+
+    @Override
     public void onConnectSelected() {
 
     }
@@ -30,22 +58,17 @@ public class Controller implements IViewListener {
     }
 
     @Override
-    public void onSearchSelected(String text, SearchMode mode) {
+    public void onAddBookSelected() {
 
     }
 
     @Override
-    public void addBookSelected() {
+    public void onRateBookSelected() {
 
     }
 
     @Override
-    public void rateBookSelected() {
-
-    }
-
-    @Override
-    public void DetailsSelected() {
+    public void onDetailsSelected() {
 
     }
 }

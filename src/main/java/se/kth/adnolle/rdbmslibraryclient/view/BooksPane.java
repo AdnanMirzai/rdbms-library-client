@@ -10,6 +10,8 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import java.sql.Date;
+import java.util.List;
+
 import se.kth.adnolle.rdbmslibraryclient.model.Book;
 import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
 
@@ -26,6 +28,24 @@ public class BooksPane extends VBox {
     public BooksPane() { this.init(); }
 
     public void setViewListener(IViewListener controller) { this.controller = controller; }
+
+    public void showAlertAndWait(String msg, Alert.AlertType type) {
+        // types: INFORMATION, WARNING et c.
+        Alert alert = new Alert(type, msg);
+        alert.showAndWait();
+    }
+
+    public void showAlertAndWait(String msg, Alert.AlertType type, String title, String header) {
+        Alert alert = new Alert(type, msg);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.showAndWait();
+    }
+
+    public void displayBooks(List<Book> result) {
+        booksInTable.clear();
+        booksInTable.addAll(result);
+    }
 
     private void initSearchView() {
         searchField = new TextField();
