@@ -67,17 +67,8 @@ public class Controller implements IViewListener {
                 List<Genre> genres = database.getAllGenres();
                 Platform.runLater(() -> {
                     Optional<Book> createdBook = view.showAddBookDialog(authors, genres);
-                    if(createdBook.isPresent()) {
-                        Runnable task2 = () -> {
-                            try {
-                                database.addBook(createdBook.get(), createdBook.get().getAuthors(), createdBook.get().getGenres());
-                            } catch (InsertException e) {
-                                Platform.runLater(() -> view.showAlertAndWait("Database insert error", ERROR));
-                            }
-                        };
-                        Thread saveWorker = new Thread(task2); //No race condition, we start this when we already have data
-                        saveWorker.start();
-                    }
+                    if(createdBook.isPresent())
+                        addBookToDB(createdBook.get());
                 });
             } catch (SelectException e) {
                 Platform.runLater(() -> view.showAlertAndWait("Database fetch data error.", ERROR));
@@ -85,6 +76,18 @@ public class Controller implements IViewListener {
         };
         Thread fetchWorker = new Thread(task);
         fetchWorker.start();
+    }
+
+    private void addBookToDB(Book createdBook) {
+        Runnable task2 = () -> {
+            try {
+                database.addBook(createdBook, createdBook.getAuthors(), createdBook.getGenres());
+            } catch (InsertException e) {
+                Platform.runLater(() -> view.showAlertAndWait("Database insert error", ERROR));
+            }
+        };
+        Thread saveWorker = new Thread(task2); //No race condition, we start this when we already have data
+        saveWorker.start();
     }
 
     @Override
