@@ -4,6 +4,7 @@ import static javafx.scene.control.Alert.AlertType.*;
 import java.util.List;
 import java.util.Optional;
 
+import javafx.application.Platform;
 import se.kth.adnolle.rdbmslibraryclient.model.*;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
@@ -27,24 +28,25 @@ public class Controller implements IViewListener {
             view.showAlertAndWait("Enter a search string!", WARNING);
             return;
         }
-
-        try {
-            List<Book> result = switch (mode) {
-                case Title -> database.findBooksByTitle(searchFor);
-                case ISBN -> database.findBooksByIsbn(searchFor);
-                case Author -> database.findBooksByAuthorName(searchFor);
-                case Genre -> database.findBooksByGenre(searchFor);
-                case Rating -> database.findBooksByRating(searchFor);
-            };
-            if(result == null || result.isEmpty()) {
-                view.showAlertAndWait("No results found.", INFORMATION);
+        Runnable task = () -> {
+            try{
+                List<Book> result = switch (mode) {
+                    case Title -> database.findBooksByTitle(searchFor);
+                    case ISBN -> database.findBooksByIsbn(searchFor);
+                    case Author -> database.findBooksByAuthorName(searchFor);
+                    case Genre -> database.findBooksByGenre(searchFor);
+                    case Rating -> database.findBooksByRating(searchFor);
+                };
+                if(result == null || result.isEmpty()) {
+                    Platform.runLater(() -> view.showAlertAndWait("No results found.", INFORMATION));
+                }
+                else Platform.runLater(() -> view.displayBooks(result));
+            } catch (SelectException e) {
+                Platform.runLater(() -> view.showAlertAndWait("Database error.", ERROR));
             }
-            else view.displayBooks(result);
-
-        } catch (Exception e) {
-            view.showAlertAndWait("Database error.", ERROR);
-        }
-
+        };
+        Thread worker = new Thread(task);
+        worker.start();
     }
 
     @Override
