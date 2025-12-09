@@ -3,7 +3,6 @@ package se.kth.adnolle.rdbmslibraryclient.controller;
 import static javafx.scene.control.Alert.AlertType.*;
 import java.util.List;
 import java.util.Optional;
-
 import javafx.application.Platform;
 import se.kth.adnolle.rdbmslibraryclient.model.*;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
@@ -12,7 +11,6 @@ import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 
 public class Controller implements IViewListener {
 
-    //private final Stage primaryStage;
     private final IBooksDb database;
     private final BooksPane view;
 
@@ -28,8 +26,9 @@ public class Controller implements IViewListener {
             view.showAlertAndWait("Enter a search string!", WARNING);
             return;
         }
+
         Runnable task = () -> {
-            try{
+            try {
                 List<Book> result = switch (mode) {
                     case Title -> database.findBooksByTitle(searchFor);
                     case ISBN -> database.findBooksByIsbn(searchFor);
@@ -41,8 +40,9 @@ public class Controller implements IViewListener {
                     Platform.runLater(() -> view.showAlertAndWait("No results found.", INFORMATION));
                 }
                 else Platform.runLater(() -> view.displayBooks(result));
-            } catch (SelectException e) {
-                Platform.runLater(() -> view.showAlertAndWait("Database error.", ERROR));
+            }
+            catch (SelectException e) {
+                Platform.runLater(() -> view.showAlertAndWait("Database fetch data error.", ERROR));
             }
         };
         Thread worker = new Thread(task);
@@ -61,20 +61,30 @@ public class Controller implements IViewListener {
 
     @Override
     public void onAddBookSelected() {
-        try{
-            List<Author> authors = database.getAllAuthors();
-            List<Genre> genres = database.getAllGenres();
-            Optional<Book> createdBook = view.showAddBookDialog(authors, genres);
-            if(createdBook.isPresent()) {
-                try {
-                    database.addBook(createdBook.get(), createdBook.get().getAuthors(), createdBook.get().getGenres());
-                } catch (Exception e) {
-                    view.showAlertAndWait("Input correct information", ERROR);
-                }
+        Runnable task = () -> {
+            try {
+                List<Author> authors = database.getAllAuthors();
+                List<Genre> genres = database.getAllGenres();
+                Platform.runLater(() -> {
+                    Optional<Book> createdBook = view.showAddBookDialog(authors, genres);
+                    if(createdBook.isPresent()) {
+                        Runnable task2 = () -> {
+                            try {
+                                database.addBook(createdBook.get(), createdBook.get().getAuthors(), createdBook.get().getGenres());
+                            } catch (InsertException e) {
+                                Platform.runLater(() -> view.showAlertAndWait("Database insert error", ERROR));
+                            }
+                        };
+                        Thread saveWorker = new Thread(task2); //No race condition, we start this when we already have data
+                        saveWorker.start();
+                    }
+                });
+            } catch (SelectException e) {
+                Platform.runLater(() -> view.showAlertAndWait("Database fetch data error.", ERROR));
             }
-        } catch (Exception e) {
-            view.showAlertAndWait("Database error.", ERROR);
-        }
+        };
+        Thread fetchWorker = new Thread(task);
+        fetchWorker.start();
     }
 
     @Override

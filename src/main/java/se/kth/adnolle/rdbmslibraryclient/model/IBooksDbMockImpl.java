@@ -126,6 +126,9 @@ public class IBooksDbMockImpl implements IBooksDb {
         Book newBook = new Book(Id, book.getIsbn(), book.getTitle(), book.getPublished(), book.getStoryLine(),
                 book.getRating(), book.getAuthors(), book.getGenres());
         //books.add(newBook); juste asList är immutable, så detta går ej, men vi låtsas
+        try{
+            Thread.sleep(10000);
+        } catch (Exception _) {}
         System.out.println("Mock test: Added book " + newBook.getTitle());
     }
 
