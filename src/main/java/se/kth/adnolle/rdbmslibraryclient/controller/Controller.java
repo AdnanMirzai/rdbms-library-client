@@ -95,12 +95,16 @@ public class Controller implements IViewListener {
         if(selectedBook != null) {
             Optional<Integer> rating = view.showRateBookDialog(selectedBook);
             if(rating.isPresent()) {
-                try{
-                    database.rateBook(selectedBook.getBookId(), rating.get());
-                }
-                catch (Exception e) {
-                    view.showAlertAndWait("Database error.", ERROR);
-                }
+                Runnable task = () -> {
+                    try {
+                        database.rateBook(selectedBook.getBookId(), rating.get());
+                    }
+                    catch (Exception e) {
+                        Platform.runLater(() -> view.showAlertAndWait("Database error.", ERROR));
+                    }
+                };
+                Thread rateWorker = new Thread(task);
+                rateWorker.start();
             }
         }
         else view.showAlertAndWait("Select a book to rate", INFORMATION);

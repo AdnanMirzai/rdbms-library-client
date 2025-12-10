@@ -16,7 +16,6 @@ public class Main extends Application {
         IBooksDb database = new IBooksDbMockImpl();
         BooksPane view = new BooksPane();
         Controller controller = new Controller(database, view);
-        // Will add real database connection here later
 
         Scene scene = new Scene(view, 800, 600);
         primaryStage.setTitle("Books Database Client");
