@@ -1,0 +1,48 @@
+CREATE TABLE T_Book (
+bookId INT AUTO_INCREMENT,
+isbn CHAR(13) NOT NULL UNIQUE,
+title VARCHAR(100) NOT NULL,
+published DATE NOT NULL,
+storyLine VARCHAR(500),
+rating TINYINT,
+CHECK (isbn REGEXP '^[0-9]{13}$'),
+CHECK (rating IS NULL OR (rating >= 1 AND rating <= 5)),
+PRIMARY KEY (bookId)
+);
+
+CREATE TABLE T_Genre (
+genreId INT AUTO_INCREMENT,
+genre VARCHAR(50) NOT NULL,
+PRIMARY KEY(genreId)
+);
+
+CREATE TABLE T_Author (
+auId INT AUTO_INCREMENT,
+name VARCHAR(100) NOT NULL,
+dob DATE,
+PRIMARY KEY (auId)
+);
+
+CREATE TABLE T_BookGenre (
+genreId INT NOT NULL,
+bookId INT NOT NULL,
+PRIMARY KEY(genreId, bookId),
+CONSTRAINT hasGenre_genre_id FOREIGN KEY (genreId)
+    REFERENCES T_Genre(genreId)
+    ON DELETE CASCADE,
+CONSTRAINT hasGenre_bookId FOREIGN KEY (bookId)
+    REFERENCES T_Book(bookId)
+    ON DELETE CASCADE
+);
+
+CREATE TABLE T_BookAuthor (
+auId INT NOT NULL,
+bookId INT NOT NULL,
+PRIMARY KEY(auId, bookId),
+CONSTRAINT writes_auId FOREIGN KEY (auId)
+    REFERENCES T_Author(auId)
+    ON DELETE CASCADE,
+CONSTRAINT writes_bookId FOREIGN KEY (bookId)
+    REFERENCES T_Book(bookId)
+    ON DELETE CASCADE
+);
