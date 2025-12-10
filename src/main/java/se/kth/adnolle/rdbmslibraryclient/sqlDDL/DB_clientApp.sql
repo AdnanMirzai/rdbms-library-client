@@ -1,0 +1,3 @@
+CREATE USER 'DB_clientApp'@localhost IDENTIFIED BY 'ABC.123';
+GRANT INSERT, UPDATE, SELECT, DELETE ON LibraryDB.* TO 'DB_clientApp'@localhost;
+FLUSH PRIVILEGES;
