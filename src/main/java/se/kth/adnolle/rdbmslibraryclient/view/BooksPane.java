@@ -87,16 +87,23 @@ public class BooksPane extends VBox {
         TableColumn<Book, String> titleCol = new TableColumn<>("Title");
         TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
         TableColumn<Book, Date> publishedCol = new TableColumn<>("Published");
+        TableColumn<Book, Integer> ratingCol = new TableColumn<>("Rating");
+        TableColumn<Book, List<Genre>> genreCol = new TableColumn<>("Genres");
+
         //noinspection unchecked
-        booksTable.getColumns().addAll(titleCol, isbnCol, publishedCol);
+        booksTable.getColumns().addAll(titleCol, isbnCol, publishedCol, ratingCol, genreCol);
         // give title column some extra space
         titleCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.3));
+        isbnCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.2));
+        genreCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.3));
 
         // define how to fill data for each cell,
         // get values from Book properties
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
         isbnCol.setCellValueFactory(new PropertyValueFactory<>("isbn"));
         publishedCol.setCellValueFactory(new PropertyValueFactory<>("published"));
+        ratingCol.setCellValueFactory(new PropertyValueFactory<>("rating"));
+        genreCol.setCellValueFactory(new PropertyValueFactory<>("genres"));
 
         // When double-click on row, show books author details
         booksTable.setOnMouseClicked(event -> {
