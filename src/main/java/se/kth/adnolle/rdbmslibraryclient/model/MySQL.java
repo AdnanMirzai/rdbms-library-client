@@ -9,7 +9,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-public class DBmySQL implements IBooksDb {
+public class MySQL implements IBooksDb {
     private Connection connection;
 
     @Override
