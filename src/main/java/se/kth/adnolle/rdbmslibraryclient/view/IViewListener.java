@@ -20,4 +20,7 @@ public interface IViewListener {
 
     // Rate book
     void onRateBookSelected(Book selectedBook);
+
+    // Exit
+    void onExitSelected();
 }

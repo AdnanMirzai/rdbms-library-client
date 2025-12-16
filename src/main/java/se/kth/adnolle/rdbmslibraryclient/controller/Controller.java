@@ -111,6 +111,15 @@ public class Controller implements IViewListener {
     }
 
     @Override
+    public void onExitSelected() {
+        try {
+            database.disconnect();
+        } catch (ConnectionException e) {
+            view.showAlertAndWait("Failed to disconnect from database: " + e.getMessage(), ERROR);
+        }
+    }
+
+    @Override
     public void onAuthorDetailsSelected(Book selectedBook) {
         if(selectedBook != null && !selectedBook.getAuthors().isEmpty()) {
             List<Author> authors = selectedBook.getAuthors();

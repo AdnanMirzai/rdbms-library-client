@@ -1,15 +1,12 @@
 package se.kth.adnolle.rdbmslibraryclient.model;
 
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.ConnectionException;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.InsertException;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.SelectException;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.UpdateException;
+import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MySQL implements IBooksDb {
+public class MySQLImpl implements IBooksDb {
     private Connection connection;
 
     @Override
@@ -40,58 +37,27 @@ public class MySQL implements IBooksDb {
 
     @Override
     public List<Book> findBooksByTitle(String title) throws SelectException {
-        return List.of();
+        List<Book> books = new ArrayList<>();
+
+        String sql = "SELECT * FROM T_Book WHERE title Like ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, "%" + title + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    books.add(convertToBook(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new SelectException("Search failed: " + e.getMessage());
+        }
+        return books;
     }
 
     @Override
     public List<Book> findBooksByIsbn(String isbn) throws SelectException {
 
         return List.of();
-    }
-
-    private List<Author> getAuthorsForBook(int bookId) throws SQLException {
-        List<Author> authors = new ArrayList<>();
-
-        String sql =
-                "SELECT * FROM T_Author AS A " +
-                "JOIN T_BookAuthor AS BA ON A.auId = BA.auId " +
-                "WHERE BA.bookId = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1,bookId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    int id = rs.getInt("auId");
-                    String name = rs.getString("name");
-                    Date dob = rs.getDate("DOB");
-                    authors.add(new Author(id, name, dob));
-                }
-            }
-        }
-        return authors;
-    }
-
-    private List<Genre> getGenresForBook(int bookId) throws SQLException {
-        List<Genre> genres = new ArrayList<>();
-
-        String sql =
-                "SELECT G.genreId, G.genre FROM T_Genre AS G " +
-                "JOIN T_BookGenre AS BG ON G.genreId = BG.genreId " +
-                "WHERE BG.bookId = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1,bookId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    int id = rs.getInt("genreId");
-                    String genre = rs.getString("genre");
-                    genres.add(new Genre(id, genre));
-                }
-            }
-        }
-        return genres;
     }
 
     @Override
@@ -127,5 +93,64 @@ public class MySQL implements IBooksDb {
     @Override
     public List<Genre> getAllGenres() throws SelectException {
         return List.of();
+    }
+
+    //Helpers
+    private List<Author> getAuthorsForBook(int bookId) throws SQLException {
+        List<Author> authors = new ArrayList<>();
+
+        String sql =
+                        "SELECT * FROM T_Author AS A " +
+                        "JOIN T_BookAuthor AS BA ON A.auId = BA.auId " +
+                        "WHERE BA.bookId = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1,bookId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("auId");
+                    String name = rs.getString("name");
+                    Date dob = rs.getDate("DOB");
+                    authors.add(new Author(id, name, dob));
+                }
+            }
+        }
+        return authors;
+    }
+
+    private List<Genre> getGenresForBook(int bookId) throws SQLException {
+        List<Genre> genres = new ArrayList<>();
+
+        String sql =
+                        "SELECT G.genreId, G.genre FROM T_Genre AS G " +
+                        "JOIN T_BookGenre AS BG ON G.genreId = BG.genreId " +
+                        "WHERE BG.bookId = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1,bookId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("genreId");
+                    String genre = rs.getString("genre");
+                    genres.add(new Genre(id, genre));
+                }
+            }
+        }
+        return genres;
+    }
+
+    private Book convertToBook(ResultSet rs) throws SQLException {
+        int bookId = rs.getInt("bookId");
+        String isbn = rs.getString("isbn");
+        String title = rs.getString("title");
+        Date published = rs.getDate("published");
+        String storyLine = rs.getString("storyLine");
+        int rating = rs.getInt("rating");
+        List<Author> authors = getAuthorsForBook(bookId);
+        List<Genre> genres = getGenresForBook(bookId);
+
+        return new Book(bookId, isbn, title, published, storyLine, rating, authors, genres);
     }
 }

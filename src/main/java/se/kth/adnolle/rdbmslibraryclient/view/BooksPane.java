@@ -134,6 +134,10 @@ public class BooksPane extends VBox {
         menuBar = new MenuBar();
         menuBar.getMenus().addAll(fileMenu, manageMenu);
 
+        exitItem.setOnAction(_ -> controller.onExitSelected());
+        connectItem.setOnAction(_ -> controller.onConnectSelected());
+        disconnectItem.setOnAction(_ -> controller.onDisconnectSelected());
+
         addItem.setOnAction(_ -> controller.onAddBookSelected());
         rateItem.setOnAction(_ -> {
             Book selectedBook = booksTable.getSelectionModel().getSelectedItem();
