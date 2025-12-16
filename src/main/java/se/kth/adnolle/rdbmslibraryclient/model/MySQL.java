@@ -4,9 +4,9 @@ import se.kth.adnolle.rdbmslibraryclient.model.exceptions.ConnectionException;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.InsertException;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.SelectException;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.UpdateException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MySQL implements IBooksDb {
@@ -45,7 +45,53 @@ public class MySQL implements IBooksDb {
 
     @Override
     public List<Book> findBooksByIsbn(String isbn) throws SelectException {
+
         return List.of();
+    }
+
+    private List<Author> getAuthorsForBook(int bookId) throws SQLException {
+        List<Author> authors = new ArrayList<>();
+
+        String sql =
+                "SELECT * FROM T_Author AS A " +
+                "JOIN T_BookAuthor AS BA ON A.auId = BA.auId " +
+                "WHERE BA.bookId = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1,bookId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("auId");
+                    String name = rs.getString("name");
+                    Date dob = rs.getDate("DOB");
+                    authors.add(new Author(id, name, dob));
+                }
+            }
+        }
+        return authors;
+    }
+
+    private List<Genre> getGenresForBook(int bookId) throws SQLException {
+        List<Genre> genres = new ArrayList<>();
+
+        String sql =
+                "SELECT G.genreId, G.genre FROM T_Genre AS G " +
+                "JOIN T_BookGenre AS BG ON G.genreId = BG.genreId " +
+                "WHERE BG.bookId = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1,bookId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("genreId");
+                    String genre = rs.getString("genre");
+                    genres.add(new Genre(id, genre));
+                }
+            }
+        }
+        return genres;
     }
 
     @Override
