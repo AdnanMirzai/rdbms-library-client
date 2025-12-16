@@ -51,12 +51,20 @@ public class Controller implements IViewListener {
 
     @Override
     public void onConnectSelected() {
-
+        try {
+            if(database.connect("LibraryDB")) view.showAlertAndWait("Connected!", INFORMATION);
+        } catch (ConnectionException e) {
+            view.showAlertAndWait("Failed to connect to database: " + e.getMessage(), ERROR);
+        }
     }
 
     @Override
     public void onDisconnectSelected() {
-
+        try {
+            database.disconnect();
+        } catch (ConnectionException e) {
+            view.showAlertAndWait("Failed to disconnect from database: " + e.getMessage(), ERROR);
+        }
     }
 
     @Override
@@ -113,9 +121,11 @@ public class Controller implements IViewListener {
     @Override
     public void onExitSelected() {
         try {
-            database.disconnect();
+            if(database != null) database.disconnect();
         } catch (ConnectionException e) {
             view.showAlertAndWait("Failed to disconnect from database: " + e.getMessage(), ERROR);
+        } finally {
+            javafx.application.Platform.exit();
         }
     }
 

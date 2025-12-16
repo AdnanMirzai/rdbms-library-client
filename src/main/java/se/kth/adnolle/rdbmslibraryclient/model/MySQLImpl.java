@@ -11,6 +11,12 @@ public class MySQLImpl implements IBooksDb {
 
     @Override
     public boolean connect(String database) throws ConnectionException {
+        try {
+            if(connection != null && !connection.isClosed()) return true;
+        } catch (SQLException e) {
+            throw new ConnectionException(e.getMessage());
+        }
+
         String url = "jdbc:mysql://localhost:3306/" + database + "?serverTimezone=UTC";
         String user = "DB_clientApp";
         String password = "ABC.123";
@@ -18,7 +24,7 @@ public class MySQLImpl implements IBooksDb {
             connection = DriverManager.getConnection(url, user, password);
             return true;
         } catch (SQLException e) {
-            throw new ConnectionException("Could not connect to database: " + e.getMessage());
+            throw new ConnectionException(e.getMessage());
         }
     }
 
@@ -30,7 +36,7 @@ public class MySQLImpl implements IBooksDb {
             try {
                 connection.close();
             } catch(SQLException e) {
-                throw new ConnectionException("Error when disconnecting: " + e.getMessage());
+                throw new ConnectionException(e.getMessage());
             }
         }
     }

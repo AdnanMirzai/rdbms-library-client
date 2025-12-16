@@ -7,23 +7,21 @@ import se.kth.adnolle.rdbmslibraryclient.controller.Controller;
 import se.kth.adnolle.rdbmslibraryclient.model.IBooksDb;
 import se.kth.adnolle.rdbmslibraryclient.model.MySQLImpl;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
-
-import java.io.IOException;
+import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 
 public class Main extends Application {
     @Override
-    public void start(Stage primaryStage) throws IOException {
+    public void start(Stage primaryStage) {
         IBooksDb database = new MySQLImpl();
         BooksPane view = new BooksPane();
-        Controller controller = new Controller(database, view);
+        IViewListener controller = new Controller(database, view);
 
         Scene scene = new Scene(view, 800, 600);
         primaryStage.setTitle("Books Database Client");
 
         primaryStage.setOnCloseRequest(event -> {
-            try {
-                database.disconnect();
-            } catch (Exception _) {}
+            event.consume();
+            controller.onExitSelected();
         });
 
         primaryStage.setScene(scene);
