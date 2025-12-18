@@ -26,6 +26,10 @@ public class Controller implements IViewListener {
             view.showAlertAndWait("Enter a search string!", WARNING);
             return;
         }
+        if(!isDBConnected()) {
+            view.showAlertAndWait("Not connected to database!", INFORMATION);
+            return;
+        }
 
         Runnable task = () -> {
             try {
@@ -49,6 +53,15 @@ public class Controller implements IViewListener {
         worker.start();
     }
 
+    private boolean isDBConnected() {
+        try {
+            return database.isConnected();
+        } catch (ConnectionException e) {
+            view.showAlertAndWait(e.getMessage(), ERROR);
+        }
+        return false;
+    }
+
     @Override
     public void onConnectSelected() {
         try {
@@ -62,6 +75,7 @@ public class Controller implements IViewListener {
     public void onDisconnectSelected() {
         try {
             database.disconnect();
+            view.showAlertAndWait("Disconnected!", INFORMATION);
         } catch (ConnectionException e) {
             view.showAlertAndWait("Failed to disconnect from database: " + e.getMessage(), ERROR);
         }
@@ -69,6 +83,10 @@ public class Controller implements IViewListener {
 
     @Override
     public void onAddBookSelected() {
+        if(!isDBConnected()) {
+            view.showAlertAndWait("Not connected to database!", INFORMATION);
+            return;
+        }
         Runnable task = () -> {
             try {
                 List<Author> authors = database.getAllAuthors();
@@ -100,6 +118,10 @@ public class Controller implements IViewListener {
 
     @Override
     public void onRateBookSelected(Book selectedBook) {
+        if(!isDBConnected()) {
+            view.showAlertAndWait("Not connected to database!", INFORMATION);
+            return;
+        }
         if(selectedBook != null) {
             Optional<Integer> rating = view.showRateBookDialog(selectedBook);
             if(rating.isPresent()) {

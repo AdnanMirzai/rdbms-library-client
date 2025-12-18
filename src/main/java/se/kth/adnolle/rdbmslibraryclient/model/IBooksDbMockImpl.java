@@ -1,4 +1,4 @@
-package se.kth.adnolle.rdbmslibraryclient.model;
+/*/ package se.kth.adnolle.rdbmslibraryclient.model;
 
 //vet att vi får duplicerade resultat på böcker i alla sökfunktioner, men eftersom detta bara är för att
 // implementera view och controller så struntar vi att fixa, bara för test! Vi ska använda riktig databas sen
@@ -22,6 +22,7 @@ import java.util.List;
  * Your implementation must access a real database.
  * @author anderslm@kth.se
  */
+/*/
 public class IBooksDbMockImpl implements IBooksDb {
 
     private final List<Book> books; // the mock "database"
@@ -150,6 +151,11 @@ public class IBooksDbMockImpl implements IBooksDb {
         return new ArrayList<>(genres);
     }
 
+    @Override
+    public boolean isConnected() throws ConnectionException {
+        return false;
+    }
+
     public IBooksDbMockImpl() {
         authors = Arrays.asList(
                 new Author(1, "Catherine Ricardo", Date.valueOf("1999-11-11")),
@@ -227,3 +233,4 @@ public class IBooksDbMockImpl implements IBooksDb {
     }
 
 }
+/*/

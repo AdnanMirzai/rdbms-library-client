@@ -41,6 +41,17 @@ public class MySQLImpl implements IBooksDb {
         }
     }
 
+    public boolean isConnected() throws ConnectionException {
+        if(connection != null) {
+            try {
+                return !connection.isClosed();
+            } catch (SQLException e) {
+                throw new ConnectionException();
+            }
+        }
+        else return false;
+    }
+
     @Override
     public List<Book> findBooksByTitle(String title) throws SelectException {
         List<Book> books = new ArrayList<>();

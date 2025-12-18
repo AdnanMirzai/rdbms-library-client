@@ -120,7 +120,7 @@ public class BooksPane extends VBox {
     private void initMenus() {
         Menu fileMenu = new Menu("File");
         MenuItem exitItem = new MenuItem("Exit");
-        MenuItem connectItem = new MenuItem("Connect to Db");
+        MenuItem connectItem = new MenuItem("Connect");
         MenuItem disconnectItem = new MenuItem("Disconnect");
         fileMenu.getItems().addAll(exitItem, connectItem, disconnectItem);
 

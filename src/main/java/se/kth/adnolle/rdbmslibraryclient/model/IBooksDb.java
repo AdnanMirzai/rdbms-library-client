@@ -37,5 +37,7 @@ public interface IBooksDb {
     List<Author> getAllAuthors() throws SelectException;
     List<Genre> getAllGenres() throws SelectException;
 
+    boolean isConnected() throws ConnectionException;
+
     // TODO: Add abstract methods for all inserts, deletes and queries mentioned in the assignment
 }
