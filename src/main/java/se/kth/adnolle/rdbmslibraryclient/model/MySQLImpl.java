@@ -1,7 +1,6 @@
 package se.kth.adnolle.rdbmslibraryclient.model;
 
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +55,7 @@ public class MySQLImpl implements IBooksDb {
     public List<Book> findBooksByTitle(String title) throws SelectException {
         List<Book> books = new ArrayList<>();
 
-        String sql = "SELECT * FROM T_Book WHERE title Like ?";
+        String sql = "SELECT * FROM T_Book WHERE title LIKE ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, "%" + title + "%");
@@ -66,20 +65,55 @@ public class MySQLImpl implements IBooksDb {
                 }
             }
         } catch (SQLException e) {
-            throw new SelectException("Search failed: " + e.getMessage());
+            throw new SelectException(e.getMessage());
+        }
+        return books;
+    }
+
+    @Override
+    public List<Book> findBooksByAuthorName(String name) throws SelectException {
+        List<Book> books = new ArrayList<>();
+
+        String sql =
+                "SELECT B.* FROM T_Book AS B " +
+                "JOIN T_BookAuthor AS BA ON B.bookId = BA.bookId " +
+                "JOIN T_Author AS A ON BA.auId = A.auId " +
+                "WHERE A.name LIKE ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, "%" + name + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    books.add(convertToBook(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new SelectException(e.getMessage());
         }
         return books;
     }
 
     @Override
     public List<Book> findBooksByIsbn(String isbn) throws SelectException {
+        List<Book> books = new ArrayList<>();
 
-        return List.of();
-    }
+        String sql =
+                "SELECT B.* FROM T_Book AS B " +
+                        "JOIN T_BookAuthor AS BA ON B.bookId = BA.bookId " +
+                        "JOIN T_Author AS A ON BA.auId = A.auId " +
+                        "WHERE A.name LIKE ?";
 
-    @Override
-    public List<Book> findBooksByAuthorName(String name) throws SelectException {
-        return List.of();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, "%" + name + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    books.add(convertToBook(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
     }
 
     @Override
@@ -117,9 +151,9 @@ public class MySQLImpl implements IBooksDb {
         List<Author> authors = new ArrayList<>();
 
         String sql =
-                        "SELECT * FROM T_Author AS A " +
-                        "JOIN T_BookAuthor AS BA ON A.auId = BA.auId " +
-                        "WHERE BA.bookId = ?";
+                "SELECT * FROM T_Author AS A " +
+                "JOIN T_BookAuthor AS BA ON A.auId = BA.auId " +
+                "WHERE BA.bookId = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1,bookId);
@@ -140,9 +174,9 @@ public class MySQLImpl implements IBooksDb {
         List<Genre> genres = new ArrayList<>();
 
         String sql =
-                        "SELECT G.genreId, G.genre FROM T_Genre AS G " +
-                        "JOIN T_BookGenre AS BG ON G.genreId = BG.genreId " +
-                        "WHERE BG.bookId = ?";
+                "SELECT G.genreId, G.genre FROM T_Genre AS G " +
+                "JOIN T_BookGenre AS BG ON G.genreId = BG.genreId " +
+                "WHERE BG.bookId = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1,bookId);
