@@ -65,7 +65,10 @@ public class Controller implements IViewListener {
     @Override
     public void onConnectSelected() {
         try {
-            if(database.connect("LibraryDB")) view.showAlertAndWait("Connected!", INFORMATION);
+            if(database.connect("LibraryDB")) {
+                view.showAlertAndWait("Connected!", INFORMATION);
+                view.setConnectionIndicator(true);
+            }
         } catch (ConnectionException e) {
             view.showAlertAndWait("Failed to connect to database: " + e.getMessage(), ERROR);
         }
@@ -76,6 +79,7 @@ public class Controller implements IViewListener {
         try {
             database.disconnect();
             view.showAlertAndWait("Disconnected!", INFORMATION);
+            view.setConnectionIndicator(false);
         } catch (ConnectionException e) {
             view.showAlertAndWait("Failed to disconnect from database: " + e.getMessage(), ERROR);
         }

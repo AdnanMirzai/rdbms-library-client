@@ -13,6 +13,8 @@ import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
 
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import se.kth.adnolle.rdbmslibraryclient.model.Author;
 import se.kth.adnolle.rdbmslibraryclient.model.Book;
 import se.kth.adnolle.rdbmslibraryclient.model.Genre;
@@ -27,6 +29,7 @@ public class BooksPane extends VBox {
     private TextField searchField;
     private Button searchButton;
     private MenuBar menuBar;
+    private Circle connectionIndicator;
 
     public BooksPane() { this.init(); }
 
@@ -43,6 +46,13 @@ public class BooksPane extends VBox {
         alert.setTitle(title);
         alert.setHeaderText(header);
         alert.showAndWait();
+    }
+
+    public void setConnectionIndicator (boolean isConnected) {
+        if(isConnected) {
+            connectionIndicator.setFill(Color.GREEN);
+        }
+        else connectionIndicator.setFill(Color.RED);
     }
 
     public void displayBooks(List<Book> result) {
@@ -131,8 +141,12 @@ public class BooksPane extends VBox {
         MenuItem updateItem = new MenuItem("Update");
         manageMenu.getItems().addAll(addItem, rateItem, removeItem, updateItem);
 
+        Menu statusMenu = new Menu("Connection");
+        connectionIndicator = new Circle(6, Color.RED);
+        statusMenu.setGraphic(connectionIndicator);
+
         menuBar = new MenuBar();
-        menuBar.getMenus().addAll(fileMenu, manageMenu);
+        menuBar.getMenus().addAll(fileMenu, manageMenu, statusMenu);
 
         exitItem.setOnAction(_ -> controller.onExitSelected());
         connectItem.setOnAction(_ -> controller.onConnectSelected());
