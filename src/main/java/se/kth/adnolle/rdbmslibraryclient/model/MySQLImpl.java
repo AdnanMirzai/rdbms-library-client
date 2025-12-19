@@ -27,8 +27,7 @@ public class MySQLImpl implements IBooksDb {
         }
     }
 
-    //No need to check is connection is already closed because if closed, connection.close() is no-op.
-    //No need to check for active transactions as we always roll back in each finally block.
+
     @Override
     public void disconnect() throws ConnectionException {
         if(connection != null) {
@@ -40,6 +39,7 @@ public class MySQLImpl implements IBooksDb {
         }
     }
 
+    @Override
     public boolean isConnected() throws ConnectionException {
         if(connection != null) {
             try {
@@ -166,12 +166,33 @@ public class MySQLImpl implements IBooksDb {
 
     @Override
     public List<Author> getAllAuthors() throws SelectException {
-        return List.of();
+        List<Author> authors = new ArrayList<>();
+
+        String sql = "SELECT * FROM T_Author";
+        try {
+            ResultSet rs = connection.createStatement().executeQuery(sql);
+
+        } catch (SQLException e) {
+            throw new SelectException(e.getMessage());
+        }
+
+        return authors;
     }
 
     @Override
     public List<Genre> getAllGenres() throws SelectException {
-        return List.of();
+        List<Genre> genres = new ArrayList<>();
+
+        String sql = "SELECT * FROM T_Genre";
+        try {
+            ResultSet rs = connection.createStatement().executeQuery(sql);
+
+
+        } catch (SQLException e) {
+            throw new SelectException(e.getMessage());
+        }
+
+        return genres;
     }
 
     //Helpers
