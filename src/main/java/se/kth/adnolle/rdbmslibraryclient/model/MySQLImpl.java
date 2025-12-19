@@ -71,6 +71,25 @@ public class MySQLImpl implements IBooksDb {
     }
 
     @Override
+    public List<Book> findBooksByIsbn(String isbn) throws SelectException {
+        List<Book> books = new ArrayList<>();
+
+        String sql = "SELECT * FROM T_Book WHERE isbn = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, isbn);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    books.add(convertToBook(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
+    }
+
+    @Override
     public List<Book> findBooksByAuthorName(String name) throws SelectException {
         List<Book> books = new ArrayList<>();
 
@@ -94,17 +113,13 @@ public class MySQLImpl implements IBooksDb {
     }
 
     @Override
-    public List<Book> findBooksByIsbn(String isbn) throws SelectException {
+    public List<Book> findBooksByRating(String rating) throws SelectException {
         List<Book> books = new ArrayList<>();
 
-        String sql =
-                "SELECT B.* FROM T_Book AS B " +
-                        "JOIN T_BookAuthor AS BA ON B.bookId = BA.bookId " +
-                        "JOIN T_Author AS A ON BA.auId = A.auId " +
-                        "WHERE A.name LIKE ?";
+        String sql = "SELECT * FROM T_Book WHERE rating = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, "%" + name + "%");
+            stmt.setString(1, rating);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     books.add(convertToBook(rs));
@@ -117,13 +132,22 @@ public class MySQLImpl implements IBooksDb {
     }
 
     @Override
-    public List<Book> findBooksByRating(String rating) throws SelectException {
-        return List.of();
-    }
-
-    @Override
     public List<Book> findBooksByGenre(String genre) throws SelectException {
-        return List.of();
+        List<Book> books = new ArrayList<>();
+
+        String sql = "SELECT * FROM T_Book WHERE rating = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, genre);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    books.add(convertToBook(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
     }
 
     @Override
