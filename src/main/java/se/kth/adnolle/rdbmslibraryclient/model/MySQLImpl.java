@@ -135,10 +135,14 @@ public class MySQLImpl implements IBooksDb {
     public List<Book> findBooksByGenre(String genre) throws SelectException {
         List<Book> books = new ArrayList<>();
 
-        String sql = "SELECT * FROM T_Book WHERE rating = ?";
+        String sql =
+                "SELECT B.* FROM T_Book AS B " +
+                "JOIN T_BookGenre AS BG ON B.bookId = BG.bookId " +
+                "JOIN T_Genre AS G ON BG.genreId = G.genreId " +
+                "WHERE G.genre LIKE ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, genre);
+            stmt.setString(1, "%" + genre + "%");
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     books.add(convertToBook(rs));
