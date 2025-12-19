@@ -101,7 +101,7 @@ public class Controller implements IViewListener {
                         addBookToDB(createdBook.get());
                 });
             } catch (SelectException e) {
-                Platform.runLater(() -> view.showAlertAndWait("Database fetch data error.", ERROR));
+                Platform.runLater(() -> view.showAlertAndWait("Database fetch data error: " + e.getMessage(), ERROR));
             }
         };
         Thread fetchWorker = new Thread(task);

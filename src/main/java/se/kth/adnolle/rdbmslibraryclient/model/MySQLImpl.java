@@ -171,7 +171,12 @@ public class MySQLImpl implements IBooksDb {
         String sql = "SELECT * FROM T_Author";
         try {
             ResultSet rs = connection.createStatement().executeQuery(sql);
-
+            while(rs.next()) {
+                int auId = rs.getInt("auId");
+                String name = rs.getString("name");
+                Date DOB = rs.getDate("dob");
+                authors.add(new Author(auId, name, DOB));
+            }
         } catch (SQLException e) {
             throw new SelectException(e.getMessage());
         }
@@ -186,8 +191,11 @@ public class MySQLImpl implements IBooksDb {
         String sql = "SELECT * FROM T_Genre";
         try {
             ResultSet rs = connection.createStatement().executeQuery(sql);
-
-
+            while(rs.next()) {
+                int genreId = rs.getInt("genreId");
+                String genre = rs.getString("genre");
+                genres.add(new Genre(genreId, genre));
+            }
         } catch (SQLException e) {
             throw new SelectException(e.getMessage());
         }
