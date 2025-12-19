@@ -27,7 +27,6 @@ public class MySQLImpl implements IBooksDb {
         }
     }
 
-
     @Override
     public void disconnect() throws ConnectionException {
         if(connection != null) {
@@ -45,7 +44,7 @@ public class MySQLImpl implements IBooksDb {
             try {
                 return !connection.isClosed();
             } catch (SQLException e) {
-                throw new ConnectionException();
+                throw new ConnectionException(e.getMessage());
             }
         }
         else return false;
@@ -161,7 +160,15 @@ public class MySQLImpl implements IBooksDb {
 
     @Override
     public void rateBook(int bookId, int rating) throws UpdateException {
-
+        String sql = "UPDATE T_Book SET rating = ? WHERE bookId = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, rating);
+            stmt.setInt(2,bookId);
+            stmt.executeUpdate();
+        }
+        catch (SQLException e) {
+            throw new UpdateException(e.getMessage());
+        }
     }
 
     @Override
