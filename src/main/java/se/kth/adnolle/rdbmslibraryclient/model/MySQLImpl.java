@@ -16,7 +16,7 @@ public class MySQLImpl implements IBooksDb {
             throw new ConnectionException(e.getMessage());
         }
 
-        String url = "jdbc:mysql://localhost:3306/" + database + "?serverTimezone=UTC";
+        String url = "jdbc:mysql://localhost:3306/" + database + "?UseClientEnc=UTF8";
         String user = "DB_clientApp";
         String password = "ABC.123";
         try {
@@ -155,7 +155,60 @@ public class MySQLImpl implements IBooksDb {
 
     @Override
     public void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException {
+        String insertBook = "INSERT INTO T_Book (isbn, title, published, storyLine, rating) VALUES (?,?,?,?,?)";
+        String insertBookAuthor = "INSERT INTO T_BookAuthor (auId, bookId) VALUES (?,?)";
+        String insertBookGenre = "INSERT INTO T_BookGenre (genreId, bookId) VALUES (?,?)";
+        int bookId = 0;
+        try {
+            connection.setAutoCommit(false);
+            try (PreparedStatement stmt = connection.prepareStatement(insertBook, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setString(1, book.getIsbn());
+                stmt.setString(2, book.getTitle());
+                stmt.setDate(3, book.getPublished());
 
+                if (book.getStoryLine() != null && !book.getStoryLine().isEmpty())
+                    stmt.setString(4, book.getStoryLine());
+                else stmt.setNull(4, Types.VARCHAR);
+
+                if (book.getRating() != 0) stmt.setInt(5, book.getRating());
+                else stmt.setNull(5, Types.NULL);
+
+                stmt.executeUpdate();
+                ResultSet rs = stmt.getGeneratedKeys();
+                while (rs.next()) {
+                    bookId = rs.getInt(1);
+                }
+            }
+            try (PreparedStatement auStmt = connection.prepareStatement(insertBookAuthor)) {
+                for (Author author : authors) {
+                    auStmt.setInt(1, author.getAuId());
+                    auStmt.setInt(2, bookId);
+                    auStmt.executeUpdate();
+                }
+            }
+            try (PreparedStatement genStmt = connection.prepareStatement(insertBookGenre)) {
+                for (Genre genre : genres) {
+                    genStmt.setInt(1, genre.getGenreId());
+                    genStmt.setInt(2, bookId);
+                    genStmt.executeUpdate();
+                }
+            }
+            connection.commit();
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch(SQLException re) {
+                throw new InsertException(re.getMessage());
+            }
+            throw new InsertException(e.getMessage());
+        }
+        finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException ae) {
+                System.err.println("In finally block, could not setAutoCommit to true!" + ae.getMessage());
+            }
+        }
     }
 
     @Override
@@ -219,7 +272,6 @@ public class MySQLImpl implements IBooksDb {
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1,bookId);
-
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     int id = rs.getInt("auId");
@@ -242,7 +294,6 @@ public class MySQLImpl implements IBooksDb {
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1,bookId);
-
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     int id = rs.getInt("genreId");
