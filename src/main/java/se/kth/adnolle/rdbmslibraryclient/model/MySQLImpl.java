@@ -169,8 +169,8 @@ public class MySQLImpl implements IBooksDb {
         List<Author> authors = new ArrayList<>();
 
         String sql = "SELECT * FROM T_Author";
-        try {
-            ResultSet rs = connection.createStatement().executeQuery(sql);
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             while(rs.next()) {
                 int auId = rs.getInt("auId");
                 String name = rs.getString("name");
@@ -180,7 +180,6 @@ public class MySQLImpl implements IBooksDb {
         } catch (SQLException e) {
             throw new SelectException(e.getMessage());
         }
-
         return authors;
     }
 
@@ -189,8 +188,8 @@ public class MySQLImpl implements IBooksDb {
         List<Genre> genres = new ArrayList<>();
 
         String sql = "SELECT * FROM T_Genre";
-        try {
-            ResultSet rs = connection.createStatement().executeQuery(sql);
+        try (Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)) {
             while(rs.next()) {
                 int genreId = rs.getInt("genreId");
                 String genre = rs.getString("genre");
@@ -199,7 +198,6 @@ public class MySQLImpl implements IBooksDb {
         } catch (SQLException e) {
             throw new SelectException(e.getMessage());
         }
-
         return genres;
     }
 
