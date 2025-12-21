@@ -156,16 +156,13 @@ public class MySQLImpl implements IBooksDb {
     @Override
     public void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException {
         String insertBook = "INSERT INTO T_Book (isbn, title, published, storyLine, rating) VALUES (?,?,?,?,?)";
-        String insertBookAuthor = "INSERT INTO T_BookAuthor (auId, bookId) VALUES (?,?)";
-        String insertBookGenre = "INSERT INTO T_BookGenre (genreId, bookId) VALUES (?,?)";
-        int bookId = 0;
+        int bookId = -1;
         try {
             connection.setAutoCommit(false);
             try (PreparedStatement stmt = connection.prepareStatement(insertBook, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, book.getIsbn());
                 stmt.setString(2, book.getTitle());
                 stmt.setDate(3, book.getPublished());
-
                 if (book.getStoryLine() != null && !book.getStoryLine().isEmpty())
                     stmt.setString(4, book.getStoryLine());
                 else stmt.setNull(4, Types.VARCHAR);
@@ -179,20 +176,8 @@ public class MySQLImpl implements IBooksDb {
                     bookId = rs.getInt(1);
                 }
             }
-            try (PreparedStatement auStmt = connection.prepareStatement(insertBookAuthor)) {
-                for (Author author : authors) {
-                    auStmt.setInt(1, author.getAuId());
-                    auStmt.setInt(2, bookId);
-                    auStmt.executeUpdate();
-                }
-            }
-            try (PreparedStatement genStmt = connection.prepareStatement(insertBookGenre)) {
-                for (Genre genre : genres) {
-                    genStmt.setInt(1, genre.getGenreId());
-                    genStmt.setInt(2, bookId);
-                    genStmt.executeUpdate();
-                }
-            }
+            addBookAuthor(authors, bookId);
+            addBookGenre(genres, bookId);
             connection.commit();
         } catch (SQLException e) {
             try {
@@ -207,6 +192,28 @@ public class MySQLImpl implements IBooksDb {
                 connection.setAutoCommit(true);
             } catch (SQLException ae) {
                 System.err.println("In finally block, could not setAutoCommit to true!" + ae.getMessage());
+            }
+        }
+    }
+
+    private void addBookAuthor(List<Author> authors, int bookId) throws SQLException {
+        String insertBookAuthor = "INSERT INTO T_BookAuthor (auId, bookId) VALUES (?,?)";
+        try (PreparedStatement auStmt = connection.prepareStatement(insertBookAuthor)) {
+            for (Author author : authors) {
+                auStmt.setInt(1, author.getAuId());
+                auStmt.setInt(2, bookId);
+                auStmt.executeUpdate();
+            }
+        }
+    }
+
+    private void addBookGenre(List<Genre> genres, int bookId) throws SQLException {
+        String insertBookGenre = "INSERT INTO T_BookGenre (genreId, bookId) VALUES (?,?)";
+        try (PreparedStatement genStmt = connection.prepareStatement(insertBookGenre)) {
+            for (Genre genre : genres) {
+                genStmt.setInt(1, genre.getGenreId());
+                genStmt.setInt(2, bookId);
+                genStmt.executeUpdate();
             }
         }
     }
