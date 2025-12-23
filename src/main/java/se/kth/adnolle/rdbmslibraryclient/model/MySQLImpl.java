@@ -196,28 +196,6 @@ public class MySQLImpl implements IBooksDb {
         }
     }
 
-    private void addBookAuthor(List<Author> authors, int bookId) throws SQLException {
-        String insertBookAuthor = "INSERT INTO T_BookAuthor (auId, bookId) VALUES (?,?)";
-        try (PreparedStatement auStmt = connection.prepareStatement(insertBookAuthor)) {
-            for (Author author : authors) {
-                auStmt.setInt(1, author.getAuId());
-                auStmt.setInt(2, bookId);
-                auStmt.executeUpdate();
-            }
-        }
-    }
-
-    private void addBookGenre(List<Genre> genres, int bookId) throws SQLException {
-        String insertBookGenre = "INSERT INTO T_BookGenre (genreId, bookId) VALUES (?,?)";
-        try (PreparedStatement genStmt = connection.prepareStatement(insertBookGenre)) {
-            for (Genre genre : genres) {
-                genStmt.setInt(1, genre.getGenreId());
-                genStmt.setInt(2, bookId);
-                genStmt.executeUpdate();
-            }
-        }
-    }
-
     @Override
     public void rateBook(int bookId, int rating) throws UpdateException {
         String sql = "UPDATE T_Book SET rating = ? WHERE bookId = ?";
@@ -268,7 +246,15 @@ public class MySQLImpl implements IBooksDb {
         return genres;
     }
 
-    //Helpers
+    //Private helper methods
+
+    /**
+     * Helper method to get all authors for a book.
+     * Executes a JOIN query between T_Author and table T_BookAuthor.
+     * @param bookId The unique ID of the book.
+     * @return A list of Author objects associated with the book.
+     * @throws SQLException If the SQL query fails.
+     */
     private List<Author> getAuthorsForBook(int bookId) throws SQLException {
         List<Author> authors = new ArrayList<>();
 
@@ -291,6 +277,13 @@ public class MySQLImpl implements IBooksDb {
         return authors;
     }
 
+    /**
+     * Helper method to get all genres for a book.
+     * Executes a JOIN query between T_Genre and table T_BookGenre.
+     * @param bookId The unique ID of the book.
+     * @return A list of Author objects associated with the book.
+     * @throws SQLException If the SQL query fails.
+     */
     private List<Genre> getGenresForBook(int bookId) throws SQLException {
         List<Genre> genres = new ArrayList<>();
 
@@ -312,6 +305,12 @@ public class MySQLImpl implements IBooksDb {
         return genres;
     }
 
+    /**
+     * Converts the current row of a ResultSet to a Book object.
+     * @param rs The ResultSet positioned at the current row.
+     * @return A fully populated Book object.
+     * @throws SQLException If a database access error occurs or the column labels are invalid.
+     */
     private Book convertToBook(ResultSet rs) throws SQLException {
         int bookId = rs.getInt("bookId");
         String isbn = rs.getString("isbn");
@@ -323,5 +322,41 @@ public class MySQLImpl implements IBooksDb {
         List<Genre> genres = getGenresForBook(bookId);
 
         return new Book(bookId, isbn, title, published, storyLine, rating, authors, genres);
+    }
+
+    /**
+     * Helper method to link authors to a newly created book.
+     * Inserts rows into the table T_BookAuthor.
+     * @param authors The list of authors to associate with the book.
+     * @param bookId The ID of the newly created book.
+     * @throws SQLException If the insertion fails.
+     */
+    private void addBookAuthor(List<Author> authors, int bookId) throws SQLException {
+        String insertBookAuthor = "INSERT INTO T_BookAuthor (auId, bookId) VALUES (?,?)";
+        try (PreparedStatement auStmt = connection.prepareStatement(insertBookAuthor)) {
+            for (Author author : authors) {
+                auStmt.setInt(1, author.getAuId());
+                auStmt.setInt(2, bookId);
+                auStmt.executeUpdate();
+            }
+        }
+    }
+
+    /**
+     * Helper method to link genres to a newly created book.
+     * Inserts rows into the table T_BookGenre.
+     * @param genres The list of genres to associate with the book.
+     * @param bookId The ID of the newly created book.
+     * @throws SQLException If the insertion fails.
+     */
+    private void addBookGenre(List<Genre> genres, int bookId) throws SQLException {
+        String insertBookGenre = "INSERT INTO T_BookGenre (genreId, bookId) VALUES (?,?)";
+        try (PreparedStatement genStmt = connection.prepareStatement(insertBookGenre)) {
+            for (Genre genre : genres) {
+                genStmt.setInt(1, genre.getGenreId());
+                genStmt.setInt(2, bookId);
+                genStmt.executeUpdate();
+            }
+        }
     }
 }
