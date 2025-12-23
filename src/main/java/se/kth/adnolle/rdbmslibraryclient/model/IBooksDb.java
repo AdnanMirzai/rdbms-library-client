@@ -8,23 +8,34 @@ import java.util.List;
  * Different implementations of this interface handles the connection and
  * queries to a specific DBMS and database, for example a MySQL or a MongoDB
  * database.
- * NB! The methods in the implementation must catch the SQL/MongoDBExceptions thrown
- * by the underlying driver, wrap in a Connection/Insert/SelectException and re-throw the
- * latter exception. This way the interface is the same for both implementations, because the
- * exception type in the method signatures is the same. More info in the mentioned exception classes.
+ * <p>All methods throw specific checked exceptions (subclasses of IOException)
+ * o encapsulate the underlying SQL or database errors.</p>
  *
- * @author anderslm@kth.se
+ * @author adnolle@kth.se
  */
 public interface IBooksDb {
 
     /**
      * Connect to the database.
-     * @param database url
+     * @param database name of database to connect to
      * @return true on successful connection
+     * @throws ConnectionException If a connection error occurs.
      */
     boolean connect(String database) throws ConnectionException;
 
+    /**
+     * Closes the connection to the database.
+     * @throws ConnectionException If an error occurs while closing the connection.
+     */
     void disconnect() throws ConnectionException;
+
+    /**
+     * Checks if there is an active connection to the database.
+     * @return true if connected.
+     * @throws ConnectionException If the status could not be determined.
+     */
+    boolean isConnected() throws ConnectionException;
+
 
     List<Book> findBooksByTitle(String title) throws SelectException;
     List<Book> findBooksByIsbn(String isbn) throws SelectException;
@@ -36,8 +47,4 @@ public interface IBooksDb {
     void rateBook(int bookId, int rating) throws UpdateException;
     List<Author> getAllAuthors() throws SelectException;
     List<Genre> getAllGenres() throws SelectException;
-
-    boolean isConnected() throws ConnectionException;
-
-    // TODO: Add abstract methods for all inserts, deletes and queries mentioned in the assignment
 }
