@@ -3,8 +3,8 @@ package se.kth.adnolle.rdbmslibraryclient.model;
 import java.sql.Date;
 
 /**
- * Representation of an Author.
- * with auId and name attributes
+ * Representation of an object model Author.
+ * with auId, name and DOB attributes
  * @author adnolle@kth.se
  */
 public class Author {

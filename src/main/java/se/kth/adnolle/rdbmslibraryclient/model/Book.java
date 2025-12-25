@@ -6,7 +6,6 @@ import java.util.List;
 
 /**
  * Representation of a Book.
- *
  * @author adnolle@kth.se
  */
 public class Book {

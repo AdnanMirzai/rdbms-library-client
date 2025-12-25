@@ -9,6 +9,20 @@ import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
 import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 
+/**
+ * Controller handles all communication between View and the Model.
+ * It implements {@link IViewListener} to respond to user events generated in the UI.
+ *
+ * <p><b>Threading:</b>
+ * To ensure a responsive user interface, all long-running database operations like
+ * (Select, Insert, Update) are executed on separate background threads.
+ * Results and UI updates are dispatched back to the JavaFX Application Thread
+ * using {@code Platform.runLater}.</p>
+ *
+ * <p><b>Exception Handling:</b>
+ * Exceptions thrown by the model are caught within the background tasks. Error messages are displayed to the user via the View.</p>
+ * @author adnolle@kth.se
+ */
 public class Controller implements IViewListener {
 
     private final IBooksDb database;
@@ -20,6 +34,13 @@ public class Controller implements IViewListener {
         view.setViewListener(this);
     }
 
+    /**
+     * Initiates search for books.
+     * <p>This method creates a new background thread to query the database.
+     * If a {@link SelectException} occurs, an error alert is shown.</p>
+     * @param searchFor The search string.
+     * @param mode The search criterion (Title, ISBN, etc.).
+     */
     @Override
     public void onSearchSelected(String searchFor, SearchMode mode) {
         if(searchFor == null || searchFor.isEmpty()) {
@@ -53,15 +74,11 @@ public class Controller implements IViewListener {
         worker.start();
     }
 
-    private boolean isDBConnected() {
-        try {
-            return database.isConnected();
-        } catch (ConnectionException e) {
-            view.showAlertAndWait(e.getMessage(), ERROR);
-        }
-        return false;
-    }
-
+    /**
+     * Attempts to connect to the database.
+     * Updates the connection indicator in the view upon success.
+     * Displays an error alert if a {@link ConnectionException} occurs.
+     */
     @Override
     public void onConnectSelected() {
         try {
@@ -74,6 +91,11 @@ public class Controller implements IViewListener {
         }
     }
 
+    /**
+     * Disconnects from the database.
+     * Updates the connection indicator in the view.
+     * Displays an error alert if a {@link ConnectionException} occurs.
+     */
     @Override
     public void onDisconnectSelected() {
         try {
@@ -85,6 +107,12 @@ public class Controller implements IViewListener {
         }
     }
 
+    /**
+     * Handles the flow for adding a new book.
+     * Starts a background thread to fetch available Authors and Genres from the DB.
+     * Updates the UI to show the Add Book Dialog with the fetched data.
+     * If the user confirms the dialog, save the data.
+     */
     @Override
     public void onAddBookSelected() {
         if(!isDBConnected()) {
@@ -108,6 +136,7 @@ public class Controller implements IViewListener {
         fetchWorker.start();
     }
 
+    //No race condition, we start this when we already have data
     private void addBookToDB(Book createdBook) {
         Runnable task2 = () -> {
             try {
@@ -116,10 +145,16 @@ public class Controller implements IViewListener {
                 Platform.runLater(() -> view.showAlertAndWait("Database insert error", ERROR));
             }
         };
-        Thread saveWorker = new Thread(task2); //No race condition, we start this when we already have data
+        Thread saveWorker = new Thread(task2);
         saveWorker.start();
     }
 
+    /**
+     * Handles the process of rating a selected book.
+     * Displays a dialog for rating input,
+     * then creates a background thread to perform the update in the database.
+     * @param selectedBook The selected book to be rated.
+     */
     @Override
     public void onRateBookSelected(Book selectedBook) {
         if(!isDBConnected()) {
@@ -144,6 +179,10 @@ public class Controller implements IViewListener {
         else view.showAlertAndWait("Select a book to rate", INFORMATION);
     }
 
+    /**
+     * Shuts down the application.
+     * Ensures the database connection is closed before exiting the JavaFX platform.
+     */
     @Override
     public void onExitSelected() {
         try {
@@ -155,6 +194,11 @@ public class Controller implements IViewListener {
         }
     }
 
+    /**
+     * Displays detailed information about the authors of the selected book.
+     * Works on the existing data in the Book object and does not require a DB query.
+     * @param selectedBook The selected book to show author details for.
+     */
     @Override
     public void onAuthorDetailsSelected(Book selectedBook) {
         if(selectedBook != null && !selectedBook.getAuthors().isEmpty()) {
@@ -167,5 +211,19 @@ public class Controller implements IViewListener {
             view.showAlertAndWait(builder.toString(), INFORMATION, "Author Information", headerInfo);
         }
         else view.showAlertAndWait("No book selected", ERROR);
+    }
+
+    /**
+     * Checks if the database connection is active.
+     * catches {@link ConnectionException} and alerts the user if the check fails.
+     * @return true if connected, else false.
+     */
+    private boolean isDBConnected() {
+        try {
+            return database.isConnected();
+        } catch (ConnectionException e) {
+            view.showAlertAndWait(e.getMessage(), ERROR);
+        }
+        return false;
     }
 }
