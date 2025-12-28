@@ -1,0 +1,12 @@
+services:
+  library-db:
+    image: mysql:8.3
+    container_name: library_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ABC.123
+      MYSQL_DATABASE: LibraryDB
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
