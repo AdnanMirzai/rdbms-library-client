@@ -1,0 +1,27 @@
+services:
+  # --- MySQL Service ---
+  library-db-sql:
+    image: mysql:8.3
+    container_name: library_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ABC.123
+      MYSQL_DATABASE: LibraryDB
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  # --- MongoDB Service ---
+  library-db-mongo:
+    image: mongo:7.0
+    container_name: library_mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
+      - MONGO_INITDB_DATABASE=LibraryDB
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    restart: unless-stopped
