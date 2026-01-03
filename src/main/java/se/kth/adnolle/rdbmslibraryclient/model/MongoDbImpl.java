@@ -2,6 +2,7 @@ package se.kth.adnolle.rdbmslibraryclient.model;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoException;
 import org.bson.Document;
 import com.mongodb.client.*;
 import com.mongodb.client.MongoDatabase;
@@ -19,29 +20,39 @@ public class MongoDbImpl implements IBooksDb {
 
     @Override
     public boolean connect(String databaseName) throws ConnectionException {
-        client = MongoClients.create(
-                MongoClientSettings.builder().
-                        applyConnectionString(new ConnectionString(
-                                "mongodb://DB_clientApp:ABC.123@localhost:27017/" +
-                                        databaseName + "?authSource=" + databaseName)).build());
-        database = client.getDatabase("LibraryDB");
+        if(client != null) return true;
+        try{
+            client = MongoClients.create(
+                    MongoClientSettings.builder().
+                            applyConnectionString(new ConnectionString(
+                                    "mongodb://DB_clientApp:ABC.123@localhost:27017/" +
+                                            databaseName + "?authSource=" + databaseName)).build());
+            database = client.getDatabase("LibraryDB");
 
-        counterCollection = database.getCollection("counter");
-        genreCollection = database.getCollection("genres");
-        authorCollection = database.getCollection("authors");
-        bookCollection = database.getCollection("books");
-        return true;
+            counterCollection = database.getCollection("counter");
+            genreCollection = database.getCollection("genres");
+            authorCollection = database.getCollection("authors");
+            bookCollection = database.getCollection("books");
+            return true;
+        } catch (Exception e) {
+            throw new ConnectionException(e.getMessage());
+        }
     }
 
     @Override
     public void disconnect() throws ConnectionException {
-
+        if(client != null) {
+            try {
+                client.close();
+                client = null;
+            } catch(Exception e) {
+                throw new ConnectionException(e.getMessage());
+            }
+        }
     }
 
     @Override
-    public boolean isConnected() throws ConnectionException {
-        return false;
-    }
+    public boolean isConnected() throws ConnectionException { return client != null; }
 
     @Override
     public List<Book> findBooksByTitle(String title) throws SelectException {
