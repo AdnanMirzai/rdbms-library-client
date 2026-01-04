@@ -2,6 +2,8 @@ package se.kth.adnolle.rdbmslibraryclient.model;
 
 import com.mongodb.*;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import com.mongodb.client.*;
 import com.mongodb.client.MongoDatabase;
@@ -127,7 +129,7 @@ public class MongoDbImpl implements IBooksDb {
         List<Book> books = new ArrayList<>();
         List<Integer> authorIds = new ArrayList<>();
         try {
-            Bson filter = Filters.regex("name", ".*" + name + ".*", "i");
+            Bson filter = Filters.regex("name", ".*" + name + ".*", "i"); //i = case insensitive
             for(Document doc : authorCollection.find(filter)) {
                 authorIds.add(doc.getInteger("_id"));
             }
@@ -144,12 +146,19 @@ public class MongoDbImpl implements IBooksDb {
     }
 
     @Override
-    public void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException {
-
+    public void rateBook(int bookId, int rating) throws UpdateException {
+        try {
+            Bson filter = Filters.eq("_id", bookId);
+            Bson update = Updates.set("rating", rating);
+            UpdateResult result = bookCollection.updateOne(filter,update);
+            if(result.getMatchedCount() == 0) throw new UpdateException("Book does not exist!" + bookId);
+        } catch (MongoException e) {
+            throw new UpdateException(e.getMessage());
+        }
     }
 
     @Override
-    public void rateBook(int bookId, int rating) throws UpdateException {
+    public void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException {
 
     }
 
