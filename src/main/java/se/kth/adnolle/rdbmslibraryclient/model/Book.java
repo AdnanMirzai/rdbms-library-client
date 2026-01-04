@@ -13,7 +13,7 @@ public class Book {
     private final int bookId;
     private final String isbn;
     private final String title;
-    private final Date published;
+    private final Date published; //maybe change this from SQL date to Util? and change DB impl.
     private final String storyLine;
     private final Integer rating;
     private final List<Author> authors;

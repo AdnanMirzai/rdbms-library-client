@@ -67,7 +67,7 @@ public class Controller implements IViewListener {
                 else Platform.runLater(() -> view.displayBooks(result));
             }
             catch (SelectException e) {
-                Platform.runLater(() -> view.showAlertAndWait("Database fetch data error.", ERROR));
+                Platform.runLater(() -> view.showAlertAndWait("Database fetch data error: " + e.getMessage(), ERROR));
             }
         };
         Thread worker = new Thread(task);
@@ -129,7 +129,7 @@ public class Controller implements IViewListener {
                         addBookToDB(createdBook.get());
                 });
             } catch (SelectException e) {
-                Platform.runLater(() -> view.showAlertAndWait("Database fetch data error: " + e.getMessage(), ERROR));
+                Platform.runLater(() -> view.showAlertAndWait("Database fetch error: " + e.getMessage(), ERROR));
             }
         };
         Thread fetchWorker = new Thread(task);
@@ -142,7 +142,7 @@ public class Controller implements IViewListener {
             try {
                 database.addBook(createdBook, createdBook.getAuthors(), createdBook.getGenres());
             } catch (InsertException e) {
-                Platform.runLater(() -> view.showAlertAndWait("Database insert error", ERROR));
+                Platform.runLater(() -> view.showAlertAndWait("Database insert error: " + e.getMessage(), ERROR));
             }
         };
         Thread saveWorker = new Thread(task2);
@@ -169,7 +169,7 @@ public class Controller implements IViewListener {
                         database.rateBook(selectedBook.getBookId(), rating.get());
                     }
                     catch (Exception e) {
-                        Platform.runLater(() -> view.showAlertAndWait("Database error.", ERROR));
+                        Platform.runLater(() -> view.showAlertAndWait("Database error: " + e.getMessage(), ERROR));
                     }
                 };
                 Thread rateWorker = new Thread(task);
