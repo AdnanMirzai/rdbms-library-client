@@ -5,6 +5,7 @@ import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import com.mongodb.client.*;
 import com.mongodb.client.MongoDatabase;
+import org.bson.conversions.Bson;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 
 import java.util.ArrayList;
@@ -59,7 +60,8 @@ public class MongoDbImpl implements IBooksDb {
     public List<Book> findBooksByTitle(String title) throws SelectException {
         List<Book> books = new ArrayList<>();
         try {
-            for(Document doc : bookCollection.find(Filters.regex("title", ".*" + title + ".*", "i"))) {
+            Bson filter = Filters.regex("title", ".*" + title + ".*", "i");
+            for(Document doc : bookCollection.find(filter)) {
                 books.add(convertToBook(doc));
             }
         } catch(MongoException e) {
@@ -70,21 +72,58 @@ public class MongoDbImpl implements IBooksDb {
 
     @Override
     public List<Book> findBooksByIsbn(String isbn) throws SelectException {
-        return List.of();
-    }
-
-    @Override
-    public List<Book> findBooksByAuthorName(String name) throws SelectException {
-        return List.of();
+        List<Book> books = new ArrayList<>();
+        try {
+            Bson filter = Filters.eq("isbn", isbn);
+            for(Document doc : bookCollection.find(filter)) {
+                books.add(convertToBook(doc));
+            }
+        } catch(MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
     }
 
     @Override
     public List<Book> findBooksByRating(String rating) throws SelectException {
-        return List.of();
+        List<Book> books = new ArrayList<>();
+        try {
+            int ratingInt = Integer.parseInt(rating);
+            Bson filter = Filters.eq("rating", ratingInt);
+            for(Document doc : bookCollection.find(filter)) {
+                books.add(convertToBook(doc));
+            }
+        } catch(NumberFormatException e) {
+            return books;
+        } catch(MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
     }
 
     @Override
     public List<Book> findBooksByGenre(String genre) throws SelectException {
+        List<Book> books = new ArrayList<>();
+        List<Integer> genreIds = new ArrayList<>();
+        try {
+            Bson filter = Filters.regex("genre", ".*" + genre + ".*", "i");
+            for(Document doc : genreCollection.find(filter)) {
+                genreIds.add(doc.getInteger("_id"));
+            }
+            if(genreIds.isEmpty()) return books;
+
+            Bson bookFilter = Filters.in("genreIds", genreIds);
+            for(Document bookDoc : bookCollection.find(bookFilter)) {
+                books.add(convertToBook(bookDoc));
+            }
+        } catch (MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
+    }
+
+    @Override
+    public List<Book> findBooksByAuthorName(String name) throws SelectException {
         return List.of();
     }
 
