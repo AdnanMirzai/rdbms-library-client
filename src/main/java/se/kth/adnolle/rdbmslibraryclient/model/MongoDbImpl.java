@@ -55,6 +55,60 @@ public class MongoDbImpl implements IBooksDb {
     @Override
     public boolean isConnected() throws ConnectionException { return client != null; }
 
+    @Override
+    public List<Book> findBooksByTitle(String title) throws SelectException {
+        List<Book> books = new ArrayList<>();
+        try {
+            for(Document doc : bookCollection.find(Filters.regex("title", ".*" + title + ".*", "i"))) {
+                books.add(convertToBook(doc));
+            }
+        } catch(MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
+    }
+
+    @Override
+    public List<Book> findBooksByIsbn(String isbn) throws SelectException {
+        return List.of();
+    }
+
+    @Override
+    public List<Book> findBooksByAuthorName(String name) throws SelectException {
+        return List.of();
+    }
+
+    @Override
+    public List<Book> findBooksByRating(String rating) throws SelectException {
+        return List.of();
+    }
+
+    @Override
+    public List<Book> findBooksByGenre(String genre) throws SelectException {
+        return List.of();
+    }
+
+    @Override
+    public void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException {
+
+    }
+
+    @Override
+    public void rateBook(int bookId, int rating) throws UpdateException {
+
+    }
+
+    @Override
+    public List<Author> getAllAuthors() throws SelectException {
+        return List.of();
+    }
+
+    @Override
+    public List<Genre> getAllGenres() throws SelectException {
+        return List.of();
+    }
+
+    //Helpers
     private Book convertToBook(Document doc) throws MongoException {
         int bookId = doc.getInteger("_id");
         String isbn = doc.getString("isbn");
@@ -109,58 +163,5 @@ public class MongoDbImpl implements IBooksDb {
         int genreId = doc.getInteger("_id");
         String genre = doc.getString("genre");
         return new Genre(genreId,genre);
-    }
-
-    @Override
-    public List<Book> findBooksByTitle(String title) throws SelectException {
-        List<Book> books = new ArrayList<>();
-        try {
-            for(Document doc : bookCollection.find(Filters.regex("title", ".*" + title + ".*", "i"))) {
-                books.add(convertToBook(doc));
-            }
-        } catch(MongoException e) {
-            throw new SelectException(e.getMessage());
-        }
-        return books;
-    }
-
-    @Override
-    public List<Book> findBooksByIsbn(String isbn) throws SelectException {
-        return List.of();
-    }
-
-    @Override
-    public List<Book> findBooksByAuthorName(String name) throws SelectException {
-        return List.of();
-    }
-
-    @Override
-    public List<Book> findBooksByRating(String rating) throws SelectException {
-        return List.of();
-    }
-
-    @Override
-    public List<Book> findBooksByGenre(String genre) throws SelectException {
-        return List.of();
-    }
-
-    @Override
-    public void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException {
-
-    }
-
-    @Override
-    public void rateBook(int bookId, int rating) throws UpdateException {
-
-    }
-
-    @Override
-    public List<Author> getAllAuthors() throws SelectException {
-        return List.of();
-    }
-
-    @Override
-    public List<Genre> getAllGenres() throws SelectException {
-        return List.of();
     }
 }
