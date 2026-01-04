@@ -110,8 +110,8 @@ public class MongoDbImpl implements IBooksDb {
             for(Document doc : genreCollection.find(filter)) {
                 genreIds.add(doc.getInteger("_id"));
             }
-            if(genreIds.isEmpty()) return books;
 
+            if(genreIds.isEmpty()) return books;
             Bson bookFilter = Filters.in("genreIds", genreIds);
             for(Document bookDoc : bookCollection.find(bookFilter)) {
                 books.add(convertToBook(bookDoc));
@@ -124,7 +124,23 @@ public class MongoDbImpl implements IBooksDb {
 
     @Override
     public List<Book> findBooksByAuthorName(String name) throws SelectException {
-        return List.of();
+        List<Book> books = new ArrayList<>();
+        List<Integer> authorIds = new ArrayList<>();
+        try {
+            Bson filter = Filters.regex("name", ".*" + name + ".*", "i");
+            for(Document doc : authorCollection.find(filter)) {
+                authorIds.add(doc.getInteger("_id"));
+            }
+
+            if(authorIds.isEmpty()) return books;
+            Bson authorFilter = Filters.in("authorIds", authorIds);
+            for(Document bookDoc : bookCollection.find(authorFilter)) {
+                books.add(convertToBook(bookDoc));
+            }
+        } catch (MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
     }
 
     @Override
