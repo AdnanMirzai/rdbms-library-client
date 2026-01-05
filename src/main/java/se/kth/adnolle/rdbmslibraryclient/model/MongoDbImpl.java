@@ -256,7 +256,7 @@ public class MongoDbImpl implements IBooksDb {
         String isbn = doc.getString("isbn");
         String title = doc.getString("title");
         Date utilDate = doc.getDate("published");
-        java.sql.Date published = (utilDate != null) ? new java.sql.Date(utilDate.getTime()) : null; //TODO: change in book class later so we don't have to use sql date
+        java.sql.Date published = (utilDate != null) ? new java.sql.Date(utilDate.getTime()) : null;
         String storyLine = doc.getString("storyLine");
         Integer rating = doc.getInteger("rating");
 
@@ -292,7 +292,7 @@ public class MongoDbImpl implements IBooksDb {
         int auId = doc.getInteger("_id");
         String name = doc.getString("name");
         Date utilDOB = doc.getDate("dob");
-        java.sql.Date DOB = (utilDOB != null) ? new java.sql.Date(utilDOB.getTime()) : null; //TODO: same here
+        java.sql.Date DOB = (utilDOB != null) ? new java.sql.Date(utilDOB.getTime()) : null;
         return new Author(auId, name, DOB);
     }
 

@@ -13,7 +13,7 @@ public class Book {
     private final int bookId;
     private final String isbn;
     private final String title;
-    private final Date published; //maybe change this from SQL date to Util? and change DB impl.
+    private final Date published;
     private final String storyLine;
     private final Integer rating;
     private final List<Author> authors;
@@ -33,12 +33,12 @@ public class Book {
         this.genres = genres;
     }
 
-    // For mock implementation, ID will be assigned by DB.
+    // ID will be assigned by DB.
     public Book(String isbn, String title, Date published, String storyLine, Integer rating, List<Author> authors, List<Genre> genres) {
         this(-1, isbn, title, published, storyLine, rating, authors, genres);
     }
 
-    // getters
+    // Getters
     public int getBookId() { return bookId; }
     public String getIsbn() { return isbn; }
     public String getTitle() { return title; }
