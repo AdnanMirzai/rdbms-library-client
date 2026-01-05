@@ -62,8 +62,10 @@ public class MongoDbImpl implements IBooksDb {
         List<Book> books = new ArrayList<>();
         try {
             Bson filter = Filters.regex("title", ".*" + title + ".*", "i");
-            for(Document doc : bookCollection.find(filter)) {
-                books.add(convertToBook(doc));
+            try(MongoCursor<Document> cursor = bookCollection.find(filter).iterator()) {
+                while(cursor.hasNext()) {
+                    books.add(convertToBook(cursor.next()));
+                }
             }
         } catch(MongoException e) {
             throw new SelectException(e.getMessage());
@@ -76,8 +78,10 @@ public class MongoDbImpl implements IBooksDb {
         List<Book> books = new ArrayList<>();
         try {
             Bson filter = Filters.eq("isbn", isbn);
-            for(Document doc : bookCollection.find(filter)) {
-                books.add(convertToBook(doc));
+            try(MongoCursor<Document> cursor = bookCollection.find(filter).iterator()) {
+                while(cursor.hasNext()) {
+                    books.add(convertToBook(cursor.next()));
+                }
             }
         } catch(MongoException e) {
             throw new SelectException(e.getMessage());
@@ -91,8 +95,10 @@ public class MongoDbImpl implements IBooksDb {
         try {
             int ratingInt = Integer.parseInt(rating);
             Bson filter = Filters.eq("rating", ratingInt);
-            for(Document doc : bookCollection.find(filter)) {
-                books.add(convertToBook(doc));
+            try(MongoCursor<Document> cursor = bookCollection.find(filter).iterator()) {
+                while(cursor.hasNext()) {
+                    books.add(convertToBook(cursor.next()));
+                }
             }
         } catch(NumberFormatException e) {
             return books;
@@ -108,14 +114,18 @@ public class MongoDbImpl implements IBooksDb {
         List<Integer> genreIds = new ArrayList<>();
         try {
             Bson filter = Filters.regex("genre", ".*" + genre + ".*", "i");
-            for(Document doc : genreCollection.find(filter)) {
-                genreIds.add(doc.getInteger("_id"));
+            try(MongoCursor<Document> cursor = genreCollection.find(filter).iterator()) {
+                while(cursor.hasNext()) {
+                    genreIds.add(cursor.next().getInteger("_id"));
+                }
             }
-
             if(genreIds.isEmpty()) return books;
+
             Bson bookFilter = Filters.in("genreIds", genreIds);
-            for(Document bookDoc : bookCollection.find(bookFilter)) {
-                books.add(convertToBook(bookDoc));
+            try(MongoCursor<Document> cursor = bookCollection.find(bookFilter).iterator()) {
+                while(cursor.hasNext()) {
+                    books.add(convertToBook(cursor.next()));
+                }
             }
         } catch (MongoException e) {
             throw new SelectException(e.getMessage());
@@ -128,15 +138,19 @@ public class MongoDbImpl implements IBooksDb {
         List<Book> books = new ArrayList<>();
         List<Integer> authorIds = new ArrayList<>();
         try {
-            Bson filter = Filters.regex("name", ".*" + name + ".*", "i"); //i = case insensitive
-            for(Document doc : authorCollection.find(filter)) {
-                authorIds.add(doc.getInteger("_id"));
+            Bson auNameFilter = Filters.regex("name", ".*" + name + ".*", "i"); //i = case insensitive
+            try(MongoCursor<Document> cursor = authorCollection.find(auNameFilter).iterator()) {
+                while(cursor.hasNext()) {
+                    authorIds.add(cursor.next().getInteger("_id"));
+                }
             }
-
             if(authorIds.isEmpty()) return books;
-            Bson authorFilter = Filters.in("authorIds", authorIds);
-            for(Document bookDoc : bookCollection.find(authorFilter)) {
-                books.add(convertToBook(bookDoc));
+
+            Bson BookAuthorFilter = Filters.in("authorIds", authorIds);
+            try(MongoCursor<Document> cursor = bookCollection.find(BookAuthorFilter).iterator()) {
+                while(cursor.hasNext()) {
+                    books.add(convertToBook(cursor.next()));
+                }
             }
         } catch (MongoException e) {
             throw new SelectException(e.getMessage());
@@ -188,8 +202,10 @@ public class MongoDbImpl implements IBooksDb {
     public List<Author> getAllAuthors() throws SelectException {
         List<Author> authors = new ArrayList<>();
         try {
-            for(Document doc : authorCollection.find()) {
-                authors.add(convertToAuthor(doc));
+            try(MongoCursor<Document> cursor = authorCollection.find().iterator()) {
+                while(cursor.hasNext()) {
+                    authors.add(convertToAuthor(cursor.next()));
+                }
             }
         } catch(MongoException e) {
             throw new SelectException(e.getMessage());
@@ -201,8 +217,10 @@ public class MongoDbImpl implements IBooksDb {
     public List<Genre> getAllGenres() throws SelectException {
         List<Genre> genres = new ArrayList<>();
         try {
-            for (Document doc : genreCollection.find()) {
-                genres.add(convertToGenre(doc));
+            try(MongoCursor<Document> cursor = genreCollection.find().iterator()) {
+                while(cursor.hasNext()) {
+                    genres.add(convertToGenre(cursor.next()));
+                }
             }
         } catch (MongoException e) {
             throw new SelectException(e.getMessage());
@@ -240,8 +258,10 @@ public class MongoDbImpl implements IBooksDb {
     private List<Author> getAuthorsForBook(List<Integer> authorIds) throws MongoException {
         List<Author> authors = new ArrayList<>();
         if(authorIds != null && !authorIds.isEmpty()) {
-            for(Document doc : authorCollection.find(Filters.in("_id", authorIds))) {
-                authors.add(convertToAuthor(doc));
+            try(MongoCursor<Document> cursor = authorCollection.find(Filters.in("_id", authorIds)).iterator()) {
+                while(cursor.hasNext()) {
+                    authors.add(convertToAuthor(cursor.next()));
+                }
             }
         }
         return authors;
@@ -258,8 +278,10 @@ public class MongoDbImpl implements IBooksDb {
     private List<Genre> getGenresForBook(List<Integer> genreIds) throws MongoException {
         List<Genre> genres = new ArrayList<>();
         if(genreIds != null && !genreIds.isEmpty()) {
-            for(Document doc : genreCollection.find(Filters.in("_id", genreIds))) {
-                genres.add(convertToGenre(doc));
+            try(MongoCursor<Document> cursor = genreCollection.find(Filters.in("_id", genreIds)).iterator()) {
+                while(cursor.hasNext()) {
+                    genres.add(convertToGenre(cursor.next()));
+                }
             }
         }
         return genres;
