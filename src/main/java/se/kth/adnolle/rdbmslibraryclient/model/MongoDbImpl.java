@@ -229,6 +229,12 @@ public class MongoDbImpl implements IBooksDb {
     }
 
     //Helpers
+    /**
+     * Handels auto-increment by atomically updating a counter document.
+     * @param seqName The name of the sequence to increment.
+     * @return The next ID for the sequence.
+     * @throws MongoException If the document cannot be found or updated.
+     */
     private int getNextId(String seqName) throws MongoException {
         Document doc = counterCollection.findOneAndUpdate(
                 Filters.eq("_id", seqName),
@@ -239,6 +245,12 @@ public class MongoDbImpl implements IBooksDb {
         } else throw new MongoException("Unable to get next ID for sequence: " + seqName);
     }
 
+    /**
+     * Converts MongoDB BSON Document into a Book object.
+     * @param doc BSON Document from books collection.
+     * @return Book object.
+     * @throws MongoException If needed fields are missing.
+     */
     private Book convertToBook(Document doc) throws MongoException {
         int bookId = doc.getInteger("_id");
         String isbn = doc.getString("isbn");
@@ -255,6 +267,11 @@ public class MongoDbImpl implements IBooksDb {
         return new Book(bookId,isbn,title,published,storyLine,rating,authors,genres);
     }
 
+    /**
+     * @param authorIds A list of integer author IDs.
+     * @return A list of Author objects.
+     * @throws MongoException If the database query fails.
+     */
     private List<Author> getAuthorsForBook(List<Integer> authorIds) throws MongoException {
         List<Author> authors = new ArrayList<>();
         if(authorIds != null && !authorIds.isEmpty()) {
@@ -267,6 +284,10 @@ public class MongoDbImpl implements IBooksDb {
         return authors;
     }
 
+    /**
+     * @param doc BSON Document from authors collection.
+     * @return An Author object.
+     */
     private Author convertToAuthor(Document doc) {
         int auId = doc.getInteger("_id");
         String name = doc.getString("name");
@@ -275,6 +296,11 @@ public class MongoDbImpl implements IBooksDb {
         return new Author(auId, name, DOB);
     }
 
+    /**
+     * @param genreIds A list of integer genre IDs.
+     * @return A list of Genre objects.
+     * @throws MongoException If the database query fails.
+     */
     private List<Genre> getGenresForBook(List<Integer> genreIds) throws MongoException {
         List<Genre> genres = new ArrayList<>();
         if(genreIds != null && !genreIds.isEmpty()) {
@@ -287,6 +313,10 @@ public class MongoDbImpl implements IBooksDb {
         return genres;
     }
 
+    /**
+     * @param doc BSON Document from genres collection.
+     * @return A Genre object.
+     */
     private Genre convertToGenre(Document doc) {
         int genreId = doc.getInteger("_id");
         String genre = doc.getString("genre");
