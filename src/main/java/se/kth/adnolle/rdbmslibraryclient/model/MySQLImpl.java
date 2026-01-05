@@ -167,7 +167,7 @@ public class MySQLImpl implements IBooksDb {
                     stmt.setString(4, book.getStoryLine());
                 else stmt.setNull(4, Types.VARCHAR);
 
-                if (book.getRating() != 0) stmt.setInt(5, book.getRating());
+                if (book.getRating() != null && book.getRating() != 0) stmt.setInt(5, book.getRating());
                 else stmt.setNull(5, Types.NULL);
 
                 stmt.executeUpdate();
@@ -317,7 +317,7 @@ public class MySQLImpl implements IBooksDb {
         String title = rs.getString("title");
         Date published = rs.getDate("published");
         String storyLine = rs.getString("storyLine");
-        int rating = rs.getInt("rating");
+        Integer rating = rs.getInt("rating");
         List<Author> authors = getAuthorsForBook(bookId);
         List<Genre> genres = getGenresForBook(bookId);
 
