@@ -6,6 +6,7 @@ module se.kth.adnolle.rdbmslibraryclient {
     requires org.mongodb.driver.sync.client;
     requires org.mongodb.bson;
     requires org.mongodb.driver.core;
+    requires java.desktop;
 
 
     opens se.kth.adnolle.rdbmslibraryclient to javafx.base;

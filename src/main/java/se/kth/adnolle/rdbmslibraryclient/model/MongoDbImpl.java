@@ -1,22 +1,20 @@
 package se.kth.adnolle.rdbmslibraryclient.model;
 
 import com.mongodb.*;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import com.mongodb.client.*;
 import com.mongodb.client.MongoDatabase;
 import org.bson.conversions.Bson;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 
+import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public class MongoDbImpl implements IBooksDb {
     private MongoClient client;
-    private MongoDatabase database;
     private MongoCollection<Document> genreCollection;
     private MongoCollection<Document> authorCollection;
     private MongoCollection<Document> bookCollection;
@@ -25,13 +23,14 @@ public class MongoDbImpl implements IBooksDb {
     @Override
     public boolean connect(String databaseName) throws ConnectionException {
         if(client != null) return true;
+
         try{
             client = MongoClients.create(
                     MongoClientSettings.builder().
                             applyConnectionString(new ConnectionString(
                                     "mongodb://DB_clientApp:ABC.123@127.0.0.1:27017/" +
                                             databaseName + "?authSource=" + databaseName)).build());
-            database = client.getDatabase(databaseName);
+            MongoDatabase database = client.getDatabase(databaseName);
 
             counterCollection = database.getCollection("counters");
             genreCollection = database.getCollection("genres");
@@ -56,7 +55,7 @@ public class MongoDbImpl implements IBooksDb {
     }
 
     @Override
-    public boolean isConnected() throws ConnectionException { return client != null; }
+    public boolean isConnected() { return client != null; }
 
     @Override
     public List<Book> findBooksByTitle(String title) throws SelectException {
@@ -159,20 +158,69 @@ public class MongoDbImpl implements IBooksDb {
 
     @Override
     public void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException {
+        int bookId = getNextId("bookId");
+        List<Integer> authorIds = new ArrayList<>();
+        List<Integer> genreIds = new ArrayList<>();
 
+        if(authors != null && !authors.isEmpty()) {
+            for(Author author : authors) {
+                authorIds.add(author.getAuId());
+            }
+        }
+        if(genres != null && !genres.isEmpty()) {
+            for(Genre genre : genres) {
+                genreIds.add(genre.getGenreId());
+            }
+        }
+
+        Document newBook = new Document("_id", bookId).append("isbn", book.getIsbn()).append("title", book.getTitle())
+                .append("published", book.getPublished()).append("storyLine", book.getStoryLine())
+                .append("rating", book.getRating()).append("authorIds", authorIds).append("genreIds", genreIds);
+
+        try {
+            bookCollection.insertOne(newBook);
+        } catch (MongoException e) {
+            throw new InsertException(e.getMessage());
+        }
     }
 
     @Override
     public List<Author> getAllAuthors() throws SelectException {
-        return List.of();
+        List<Author> authors = new ArrayList<>();
+        try {
+            for(Document doc : authorCollection.find()) {
+                authors.add(convertToAuthor(doc));
+            }
+        } catch(MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return authors;
     }
 
     @Override
     public List<Genre> getAllGenres() throws SelectException {
-        return List.of();
+        List<Genre> genres = new ArrayList<>();
+        try {
+            for (Document doc : genreCollection.find()) {
+                genres.add(convertToGenre(doc));
+            }
+        } catch (MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return genres;
     }
 
     //Helpers
+    private int getNextId(String seqName) throws MongoException {
+        Document doc = counterCollection.findOneAndUpdate(
+                Filters.eq("_id", seqName),
+                Updates.inc("seq",1),
+                new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+        if(doc != null) {
+            return doc.getInteger("seq");
+        } else throw new MongoException("Unable to get next ID for sequence: " + seqName);
+    }
+
     private Book convertToBook(Document doc) throws MongoException {
         int bookId = doc.getInteger("_id");
         String isbn = doc.getString("isbn");
@@ -180,13 +228,7 @@ public class MongoDbImpl implements IBooksDb {
         Date utilDate = doc.getDate("published");
         java.sql.Date published = (utilDate != null) ? new java.sql.Date(utilDate.getTime()) : null; //TODO: change in book class later so we don't have to use sql date
         String storyLine = doc.getString("storyLine");
-
-        int rating;
-        Integer ratingVal = doc.getInteger("rating");
-        if(ratingVal == null) {
-            rating = 0;
-        }
-        else rating = ratingVal;
+        Integer rating = doc.getInteger("rating");
 
         List<Integer> authorIds = doc.getList("authorIds", Integer.class);
         List<Integer> genreIds = doc.getList("genreIds", Integer.class);
