@@ -58,105 +58,35 @@ public class MySQLImpl implements IBooksDb {
 
     @Override
     public List<Book> findBooksByTitle(String title) throws SelectException {
-        List<Book> books = new ArrayList<>();
-
-        String sql = "SELECT * FROM T_Book WHERE title LIKE ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, "%" + title + "%");
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    books.add(convertToBook(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new SelectException(e.getMessage());
-        }
-        return books;
+        return executeQuery("SELECT * FROM T_Book WHERE title LIKE ?", "%" + title + "%");
     }
 
     @Override
     public List<Book> findBooksByIsbn(String isbn) throws SelectException {
-        List<Book> books = new ArrayList<>();
-
-        String sql = "SELECT * FROM T_Book WHERE isbn = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, isbn);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    books.add(convertToBook(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new SelectException(e.getMessage());
-        }
-        return books;
+        return executeQuery("SELECT * FROM T_Book WHERE isbn = ?", isbn);
     }
 
     @Override
     public List<Book> findBooksByAuthorName(String name) throws SelectException {
-        List<Book> books = new ArrayList<>();
-
-        String sql =
-                "SELECT B.* FROM T_Book AS B " +
+        String sql = "SELECT B.* FROM T_Book AS B " +
                 "JOIN T_BookAuthor AS BA ON B.bookId = BA.bookId " +
                 "JOIN T_Author AS A ON BA.auId = A.auId " +
                 "WHERE A.name LIKE ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, "%" + name + "%");
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    books.add(convertToBook(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new SelectException(e.getMessage());
-        }
-        return books;
+        return executeQuery(sql, "%" + name + "%");
     }
 
     @Override
     public List<Book> findBooksByRating(String rating) throws SelectException {
-        List<Book> books = new ArrayList<>();
-
-        String sql = "SELECT * FROM T_Book WHERE rating = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, rating);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    books.add(convertToBook(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new SelectException(e.getMessage());
-        }
-        return books;
+        return executeQuery("SELECT * FROM T_Book WHERE rating = ?", rating);
     }
 
     @Override
     public List<Book> findBooksByGenre(String genre) throws SelectException {
-        List<Book> books = new ArrayList<>();
-
-        String sql =
-                "SELECT B.* FROM T_Book AS B " +
+        String sql = "SELECT B.* FROM T_Book AS B " +
                 "JOIN T_BookGenre AS BG ON B.bookId = BG.bookId " +
                 "JOIN T_Genre AS G ON BG.genreId = G.genreId " +
                 "WHERE G.genre LIKE ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, "%" + genre + "%");
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    books.add(convertToBook(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new SelectException(e.getMessage());
-        }
-        return books;
+        return executeQuery(sql, "%" + genre + "%");
     }
 
     @Override
