@@ -30,6 +30,9 @@ public class Controller implements IViewListener {
     private final IBooksDb database;
     private final BooksPane view;
 
+    private String lastSearchTerm = "";
+    private SearchMode lastSearchMode = SearchMode.Title;
+
     public Controller(IBooksDb database, BooksPane view) {
         this.database = database;
         this.view = view;
@@ -50,6 +53,9 @@ public class Controller implements IViewListener {
             return;
         }
 
+        this.lastSearchTerm = searchFor;
+        this.lastSearchMode = mode;
+
         Runnable task = () -> {
             try {
                 List<Book> result;
@@ -65,9 +71,12 @@ public class Controller implements IViewListener {
                         case Rating -> database.findBooksByRating(searchFor);
                     };
                 }
+
                 if(result == null || result.isEmpty()) {
-                    Platform.runLater(() -> view.showAlertAndWait("No results found.", INFORMATION));
-                    Platform.runLater(() -> view.displayBooks(new ArrayList<>()));
+                    Platform.runLater(() -> {
+                        view.showAlertAndWait("No results found.", INFORMATION);
+                        view.displayBooks(new ArrayList<>());
+                    });
                 } else {
                     Platform.runLater(() -> view.displayBooks(result));
                 }
@@ -173,6 +182,9 @@ public class Controller implements IViewListener {
                 Runnable task = () -> {
                     try {
                         database.rateBook(selectedBook.getBookId(), rating.get());
+                        Platform.runLater(() -> {
+                            onSearchSelected(lastSearchTerm, lastSearchMode);
+                        });
                     }
                     catch (Exception e) {
                         Platform.runLater(() -> view.showAlertAndWait("Database error: " + e.getMessage(), ERROR));
