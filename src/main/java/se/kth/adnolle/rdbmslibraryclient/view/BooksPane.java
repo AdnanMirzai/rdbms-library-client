@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.util.Pair;
 import se.kth.adnolle.rdbmslibraryclient.model.Author;
 import se.kth.adnolle.rdbmslibraryclient.model.Book;
 import se.kth.adnolle.rdbmslibraryclient.model.Genre;
@@ -141,16 +142,27 @@ public class BooksPane extends VBox {
         MenuItem updateItem = new MenuItem("Update");
         manageMenu.getItems().addAll(addItem, rateItem, removeItem, updateItem);
 
+        Menu userMenu = new Menu("User");
+        MenuItem loginItem = new MenuItem("Login");
+        MenuItem logoutItem = new MenuItem("Logout");
+        userMenu.getItems().addAll(loginItem, logoutItem);
+
         Menu statusMenu = new Menu("Connection");
         connectionIndicator = new Circle(6, Color.RED);
         statusMenu.setGraphic(connectionIndicator);
 
         menuBar = new MenuBar();
-        menuBar.getMenus().addAll(fileMenu, manageMenu, statusMenu);
+        menuBar.getMenus().addAll(fileMenu, manageMenu, statusMenu, userMenu);
+
+
+        menuBar.getMenus().add(1, userMenu);
 
         exitItem.setOnAction(_ -> controller.onExitSelected());
         connectItem.setOnAction(_ -> controller.onConnectSelected());
         disconnectItem.setOnAction(_ -> controller.onDisconnectSelected());
+
+        loginItem.setOnAction(_ -> controller.onLoginSelected());
+        logoutItem.setOnAction(_ -> controller.onLogoutSelected());
 
         addItem.setOnAction(_ -> controller.onAddBookSelected());
         rateItem.setOnAction(_ -> {
@@ -180,4 +192,10 @@ public class BooksPane extends VBox {
         this.getChildren().addAll(menuBar, mainPane);
         VBox.setVgrow(mainPane, Priority.ALWAYS);
     }
+
+    public Optional<Pair<String, String>> showLoginDialog() {
+        LoginDialog dialog = new LoginDialog();
+        return dialog.showAndWait();
+    }
+
 }

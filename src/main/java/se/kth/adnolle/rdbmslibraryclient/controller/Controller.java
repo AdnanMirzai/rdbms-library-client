@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javafx.application.Platform;
+import javafx.util.Pair;
 import se.kth.adnolle.rdbmslibraryclient.model.*;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
@@ -29,6 +30,8 @@ public class Controller implements IViewListener {
 
     private final IBooksDb database;
     private final BooksPane view;
+
+    private User currentUser = null;
 
     private String lastSearchTerm = "";
     private SearchMode lastSearchMode = SearchMode.Title;
@@ -97,7 +100,7 @@ public class Controller implements IViewListener {
     @Override
     public void onConnectSelected() {
         try {
-            if(database.connect("LibraryDB")) {
+            if(database.connect("LibraryDB", "DB_clientApp", "ABC.123")) {
                 view.showAlertAndWait("Connected!", INFORMATION);
                 view.setConnectionIndicator(true);
             }
@@ -122,6 +125,38 @@ public class Controller implements IViewListener {
         }
     }
 
+    @Override
+    public void onLoginSelected() {
+        if (!isDBConnected()) return;
+
+        Optional<Pair<String, String>> credentials = view.showLoginDialog();
+        credentials.ifPresent(creds -> {
+            Runnable task = () -> {
+                try {
+                    User user = database.login(creds.getKey(), creds.getValue());
+
+                    if (user == null) {
+                        throw new LoginException("Invalid username or password.");
+                    }
+
+                    Platform.runLater(() -> {
+                        this.currentUser = user;
+                        view.showAlertAndWait("Welcome " + user.getUsername(), INFORMATION);
+                    });
+                } catch (LoginException e) {
+                    Platform.runLater(() -> view.showAlertAndWait("Login failed: " + e.getMessage(), ERROR));
+                }
+            };
+            new Thread(task).start();
+        });
+    }
+
+    @Override
+    public void onLogoutSelected() {
+        this.currentUser = null;
+        view.showAlertAndWait("Logged out.", INFORMATION);
+    }
+
     /**
      * Handles the flow for adding a new book.
      * Starts a background thread to fetch available Authors and Genres from the DB.
@@ -130,6 +165,11 @@ public class Controller implements IViewListener {
      */
     @Override
     public void onAddBookSelected() {
+        if (currentUser == null) {
+            view.showAlertAndWait("You must log in to add books.", WARNING);
+            return;
+        }
+
         if(!isDBConnected()) {
             view.showAlertAndWait("Not connected to database!", INFORMATION);
             return;
@@ -151,11 +191,10 @@ public class Controller implements IViewListener {
         fetchWorker.start();
     }
 
-    //No race condition, we start this when we already have data
     private void addBookToDB(Book createdBook) {
         Runnable task2 = () -> {
             try {
-                database.addBook(createdBook, createdBook.getAuthors(), createdBook.getGenres());
+                database.addBook(createdBook, createdBook.getAuthors(), createdBook.getGenres(), currentUser.getUserId());
             } catch (InsertException e) {
                 Platform.runLater(() -> view.showAlertAndWait("Database insert error: " + e.getMessage(), ERROR));
             }
@@ -172,6 +211,11 @@ public class Controller implements IViewListener {
      */
     @Override
     public void onRateBookSelected(Book selectedBook) {
+        if (currentUser == null) {
+            view.showAlertAndWait("You must log in to rate books.", WARNING);
+            return;
+        }
+
         if(!isDBConnected()) {
             view.showAlertAndWait("Not connected to database!", INFORMATION);
             return;
@@ -181,7 +225,8 @@ public class Controller implements IViewListener {
             if(rating.isPresent()) {
                 Runnable task = () -> {
                     try {
-                        database.reviewBook(selectedBook.getBookId(), rating.get());
+                        database.reviewBook(selectedBook.getBookId(), rating.get(), currentUser);
+
                         Platform.runLater(() -> {
                             onSearchSelected(lastSearchTerm, lastSearchMode);
                         });

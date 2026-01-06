@@ -47,4 +47,14 @@ public interface IViewListener {
      * Called when the user wants to exit application.
      */
     void onExitSelected();
+
+    /**
+     * Called when the user wants login.
+     */
+    void onLoginSelected();
+
+    /**
+     * Called when the user wants logout.
+     */
+    void onLogoutSelected();
 }

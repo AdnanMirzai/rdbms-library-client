@@ -20,7 +20,9 @@ public interface IBooksDb {
      * @return true on successful connection
      * @throws ConnectionException If a connection error occurs.
      */
-    boolean connect(String database) throws ConnectionException;
+    boolean connect(String database, String username, String password) throws ConnectionException;
+
+    User login(String username, String password) throws LoginException;
 
     /**
      * Closes the connection to the database.
@@ -94,7 +96,7 @@ public interface IBooksDb {
      * @param genres A list of Genre objects associated with the book.
      * @throws InsertException If the book could not be added.
      */
-    void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException;
+    void addBook(Book book, List<Author> authors, List<Genre> genres, int addedBy) throws InsertException;
 
     /**
      * Updates the rating for a specific book.
@@ -102,7 +104,7 @@ public interface IBooksDb {
      * @param rating The new rating (1-5).
      * @throws UpdateException If the update fails.
      */
-    void reviewBook(int bookId, int rating) throws UpdateException;
+    void reviewBook(int bookId, int rating, User user) throws UpdateException;
 
     /**
      * Retrieves all available authors from the database.

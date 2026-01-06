@@ -10,7 +10,7 @@ public class MySQLImpl implements IBooksDb {
     private Connection connection;
 
     @Override
-    public boolean connect(String database) throws ConnectionException {
+    public boolean connect(String database, String username, String password) throws ConnectionException {
         try {
             if(connection != null && !connection.isClosed()) return true;
         } catch (SQLException e) {
@@ -18,13 +18,31 @@ public class MySQLImpl implements IBooksDb {
         }
 
         String url = "jdbc:mysql://localhost:3306/" + database + "?UseClientEnc=UTF8";
-        String user = "DB_clientApp";
-        String password = "ABC.123";
         try {
-            connection = DriverManager.getConnection(url, user, password);
+            connection = DriverManager.getConnection(url);
             return true;
         } catch (SQLException e) {
             throw new ConnectionException(e.getMessage());
+        }
+    }
+
+    @Override
+    public User login(String username, String password) throws LoginException {
+        String query = "SELECT userId, username FROM T_User WHERE username = ? AND password = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password); // In a real app, hash this password before checking!
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new User(rs.getInt("userId"), rs.getString("username"));
+                } else {
+                    throw new LoginException("Invalid username or password.");
+                }
+            }
+        } catch (SQLException e) {
+            throw new LoginException("Login database error: " + e.getMessage());
         }
     }
 
@@ -91,7 +109,7 @@ public class MySQLImpl implements IBooksDb {
     }
 
     @Override
-    public void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException {
+    public void addBook(Book book, List<Author> authors, List<Genre> genres, int addedBy) throws InsertException {
         String insertBook = "INSERT INTO T_Book (isbn, title, published, storyLine, rating) VALUES (?,?,?,?,?)";
         int bookId = -1;
         try {
@@ -134,15 +152,17 @@ public class MySQLImpl implements IBooksDb {
     }
 
     @Override
-    public void reviewBook(int bookId, int rating) throws UpdateException {
+    public void reviewBook(int bookId, int rating, User user) throws UpdateException {
         String sql = "UPDATE T_Book SET rating = ? WHERE bookId = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, rating);
-            stmt.setInt(2,bookId);
+            stmt.setInt(2, user.getUserId());
+            stmt.setInt(3, rating);
+            stmt.setInt(4, rating);
             stmt.executeUpdate();
         }
         catch (SQLException e) {
-            throw new UpdateException(e.getMessage());
+            throw new UpdateException("Failed to add review: " + e.getMessage());
         }
     }
 
@@ -298,7 +318,7 @@ public class MySQLImpl implements IBooksDb {
     }
 
     private void insertBookReview(int bookId, int userId, int rating, String reviewText, LocalDate localDate) {
-        String insertBookReview = ""
+        String insertBookReview = "";
     }
 
     /**

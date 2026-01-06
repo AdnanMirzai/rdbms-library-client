@@ -13,6 +13,7 @@ import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 import javax.print.Doc;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -22,26 +23,53 @@ public class MongoDbImpl implements IBooksDb {
     private MongoCollection<Document> authorCollection;
     private MongoCollection<Document> bookCollection;
     private MongoCollection<Document> counterCollection;
+    private MongoCollection<Document> userCollection;
+    private MongoCollection<Document> reviewCollection;
 
     @Override
-    public boolean connect(String databaseName) throws ConnectionException {
+    public boolean connect(String databaseName, String userName, String password) throws ConnectionException {
         if(client != null) return true;
 
         try{
+            String connString = String.format("mongodb://%s:%s@127.0.0.1:27017/%s?authSource=%s",
+                    userName, password, databaseName, databaseName);
+
             client = MongoClients.create(
-                    MongoClientSettings.builder().
-                            applyConnectionString(new ConnectionString(
-                                    "mongodb://DB_clientApp:ABC.123@127.0.0.1:27017/" +
-                                            databaseName + "?authSource=" + databaseName)).build());
+                    MongoClientSettings.builder()
+                            .applyConnectionString(new ConnectionString(connString))
+                            .build());
+
             MongoDatabase database = client.getDatabase(databaseName);
+
+            database.runCommand(new Document("ping", 1));
 
             counterCollection = database.getCollection("counters");
             genreCollection = database.getCollection("genres");
             authorCollection = database.getCollection("authors");
             bookCollection = database.getCollection("books");
+            userCollection = database.getCollection("users");
+            reviewCollection = database.getCollection("reviews");
             return true;
         } catch (MongoException e) {
             throw new ConnectionException(e.getMessage());
+        }
+    }
+
+    @Override
+    public User login(String username, String password) throws LoginException {
+        try {
+            Document userDoc = userCollection.find(Filters.and(
+                    Filters.eq("username", username),
+                    Filters.eq("password", password)
+            )).first();
+
+            if (userDoc == null) {
+                throw new LoginException("Invalid username or password.");
+            }
+
+            return new User(userDoc.getInteger("_id"), userDoc.getString("username"));
+        } catch (MongoException e) {
+            throw new LoginException("Database error during login: " + e.getMessage());
         }
     }
 
@@ -124,37 +152,55 @@ public class MongoDbImpl implements IBooksDb {
     }
 
     @Override
-    public void reviewBook(int bookId, int rating) throws UpdateException {
+    public void reviewBook(int bookId, int rating, User user) throws UpdateException {
         try {
-            Bson filter = Filters.eq("_id", bookId);
-            Bson update = Updates.set("rating", rating);
-            UpdateResult result = bookCollection.updateOne(filter,update);
-            if(result.getMatchedCount() == 0) throw new UpdateException("Book does not exist!" + bookId);
+            Bson filter = Filters.and(Filters.eq("bookId", bookId), Filters.eq("userId", user.getUserId()));
+
+            Document reviewDoc = new Document()
+                    .append("bookId", bookId)
+                    .append("userId", user.getUserId())
+                    .append("rating", rating)
+                    .append("reviewDate", new Date());
+
+            reviewCollection.replaceOne(filter, reviewDoc, new ReplaceOptions().upsert(true));
+
+
+            List<Bson> pipeline = Arrays.asList(
+                    Aggregates.match(Filters.eq("bookId", bookId)),
+                    Aggregates.group("$bookId", Accumulators.avg("avgRating", "$rating"))
+            );
+
+            Double newAverage = 0.0;
+            Document result = reviewCollection.aggregate(pipeline).first();
+            if (result != null) {
+                newAverage = result.getDouble("avgRating");
+            }
+            int roundedRating = (int) Math.round(newAverage);
+            bookCollection.updateOne(Filters.eq("_id", bookId), Updates.set("rating", roundedRating));
+
         } catch (MongoException e) {
-            throw new UpdateException(e.getMessage());
+            throw new UpdateException("Failed to review book: " + e.getMessage());
         }
     }
 
     @Override
-    public void addBook(Book book, List<Author> authors, List<Genre> genres) throws InsertException {
+    public void addBook(Book book, List<Author> authors, List<Genre> genres, int addedBy) throws InsertException {
         int bookId = getNextId("bookId");
         List<Integer> authorIds = new ArrayList<>();
         List<Integer> genreIds = new ArrayList<>();
 
-        if(authors != null && !authors.isEmpty()) {
-            for(Author author : authors) {
-                authorIds.add(author.getAuId());
-            }
-        }
-        if(genres != null && !genres.isEmpty()) {
-            for(Genre genre : genres) {
-                genreIds.add(genre.getGenreId());
-            }
-        }
+        if(authors != null) authors.forEach(a -> authorIds.add(a.getAuId()));
+        if(genres != null) genres.forEach(g -> genreIds.add(g.getGenreId()));
 
-        Document newBook = new Document("_id", bookId).append("isbn", book.getIsbn()).append("title", book.getTitle())
-                .append("published", book.getPublished()).append("storyLine", book.getStoryLine())
-                .append("rating", book.getRating()).append("authorIds", authorIds).append("genreIds", genreIds);
+        Document newBook = new Document("_id", bookId)
+                .append("isbn", book.getIsbn())
+                .append("title", book.getTitle())
+                .append("published", book.getPublished())
+                .append("storyLine", book.getStoryLine())
+                .append("rating", null)
+                .append("authorIds", authorIds)
+                .append("genreIds", genreIds)
+                .append("addedBy", addedBy);
 
         try {
             bookCollection.insertOne(newBook);
