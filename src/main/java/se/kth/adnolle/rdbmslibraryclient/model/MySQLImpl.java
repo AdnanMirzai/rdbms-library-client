@@ -51,6 +51,12 @@ public class MySQLImpl implements IBooksDb {
     }
 
     @Override
+    public List<Book> getAllBooks() throws SelectException {
+        return executeQuery("SELECT * FROM T_Book WHERE title LIKE ?", "%");
+    }
+
+
+    @Override
     public List<Book> findBooksByTitle(String title) throws SelectException {
         List<Book> books = new ArrayList<>();
 
@@ -358,5 +364,27 @@ public class MySQLImpl implements IBooksDb {
                 genStmt.executeUpdate();
             }
         }
+    }
+
+    /**
+     * Generic helper to execute a SELECT query with one String parameter.
+     * @param sql The SQL query with one '?' placeholder.
+     * @param parameter The string value to put in the placeholder.
+     * @return A list of found Books.
+     * @throws SelectException If the query fails.
+     */
+    private List<Book> executeQuery(String sql, String parameter) throws SelectException {
+        List<Book> books = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, parameter);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    books.add(convertToBook(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
     }
 }

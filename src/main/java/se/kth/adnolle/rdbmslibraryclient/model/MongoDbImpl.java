@@ -58,6 +58,11 @@ public class MongoDbImpl implements IBooksDb {
     public boolean isConnected() { return client != null; }
 
     @Override
+    public List<Book> getAllBooks() throws SelectException {
+        return List.of();
+    }
+
+    @Override
     public List<Book> findBooksByTitle(String title) throws SelectException {
         List<Book> books = new ArrayList<>();
         try {

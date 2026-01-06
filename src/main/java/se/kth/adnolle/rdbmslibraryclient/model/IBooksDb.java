@@ -36,6 +36,14 @@ public interface IBooksDb {
     boolean isConnected() throws ConnectionException;
 
     /**
+     * Searches for all books if the search string is empty
+     * @return All books
+     * @throws SelectException
+     */
+    List<Book> getAllBooks() throws SelectException;
+
+
+    /**
      * Searches for books matching the given title.
      * Partial matches are supported.
      * @param title The title to search for.

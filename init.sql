@@ -1,6 +1,17 @@
--- DDL
+-- ==========================================
+-- 1. SETUP DATABASE & USERS
+-- ==========================================
 CREATE DATABASE IF NOT EXISTS LibraryDB;
 USE LibraryDB;
+
+-- Create the user with '%' to allow access from your Java Client
+CREATE USER IF NOT EXISTS 'DB_clientApp'@'%' IDENTIFIED BY 'ABC.123';
+GRANT ALL PRIVILEGES ON LibraryDB.* TO 'DB_clientApp'@'%';
+FLUSH PRIVILEGES;
+
+-- ==========================================
+-- 2. CREATE TABLES (DDL)
+-- ==========================================
 
 CREATE TABLE T_Book (
     bookId INT AUTO_INCREMENT,
@@ -31,36 +42,43 @@ CREATE TABLE T_BookGenre (
     genreId INT NOT NULL,
     bookId INT NOT NULL,
     PRIMARY KEY(genreId, bookId),
-    CONSTRAINT hasGenre_genre_id FOREIGN KEY (genreId) REFERENCES T_Genre(genreId) ON DELETE CASCADE,
-    CONSTRAINT hasGenre_bookId FOREIGN KEY (bookId) REFERENCES T_Book(bookId) ON DELETE CASCADE
+    CONSTRAINT hasGenre_genre_id FOREIGN KEY (genreId)
+        REFERENCES T_Genre(genreId)
+        ON DELETE CASCADE,
+    CONSTRAINT hasGenre_bookId FOREIGN KEY (bookId)
+        REFERENCES T_Book(bookId)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE T_BookAuthor (
     auId INT NOT NULL,
     bookId INT NOT NULL,
     PRIMARY KEY(auId, bookId),
-    CONSTRAINT writes_auId FOREIGN KEY (auId) REFERENCES T_Author(auId) ON DELETE CASCADE,
-    CONSTRAINT writes_bookId FOREIGN KEY (bookId) REFERENCES T_Book(bookId) ON DELETE CASCADE
+    CONSTRAINT writes_auId FOREIGN KEY (auId)
+        REFERENCES T_Author(auId)
+        ON DELETE CASCADE,
+    CONSTRAINT writes_bookId FOREIGN KEY (bookId)
+        REFERENCES T_Book(bookId)
+        ON DELETE CASCADE
 );
 
--- USER CONFIG (Modified for Docker Access)
-CREATE USER 'DB_clientApp'@'%' IDENTIFIED BY 'ABC.123';
-GRANT INSERT, UPDATE, SELECT, DELETE ON LibraryDB.* TO 'DB_clientApp'@'%';
-FLUSH PRIVILEGES;
-
--- DATA
+-- ==========================================
+-- 3. INSERT DATA (DML)
+-- ==========================================
 START TRANSACTION;
 
+-- GENRE
 INSERT INTO T_Genre (genre) VALUES
-('Fantasy'), ('Action'), ('Database'), ('Fiction'), 
-('Literary Fiction'), ('Dystopian'), ('Historical Fiction'), ('Contemporary');
+('Fantasy'), ('Action'),
+('Database'), ('Fiction'), ('Literary Fiction'), ('Dystopian'), ('Historical Fiction'), ('Contemporary');
 
+-- AUTHORS
 INSERT INTO T_Author (name, DOB) VALUES
-('Andrzej Sapkowski', NULL), ('George R. R. Martin', NULL), ('J. K. Rowling', NULL), 
-('C. S. Lewis', NULL), ('Catherine Ricardo', '1999-11-11'), ('Susan Ullman', '1999-11-11'), 
-('Kazuo Ishiguro', '1999-11-11'), ('Margaret Atwood', '1999-11-11'), 
-('Douglas Stuart', '1999-11-11'), ('Douglas Coupland', '1999-11-11');
+('Andrzej Sapkowski', NULL), ('George R. R. Martin', NULL), ('J. K. Rowling', NULL), ('C. S. Lewis', NULL),
+('Catherine Ricardo', '1999-11-11'), ('Susan Ullman', '1999-11-11'), ('Kazuo Ishiguro', '1999-11-11'),
+('Margaret Atwood', '1999-11-11'), ('Douglas Stuart', '1999-11-11'), ('Douglas Coupland', '1999-11-11');
 
+-- BOOKS
 INSERT INTO T_Book (isbn, title, published, storyLine, rating) VALUES
 ('1000800091730', 'The Witcher', '1999-09-01', 'En monsterjägare letar efter sitt öde.', 4),
 ('9780553103540', 'A Game of Thrones', '1996-08-06', 'Vinter kommer och alla bråkar om en stol.', 5),
@@ -76,7 +94,7 @@ INSERT INTO T_Book (isbn, title, published, storyLine, rating) VALUES
 ('3456789012222', 'Shuggie Bain', '2020-01-01', 'A story of growing up in 1980s Glasgow.', 4),
 ('3456789123333', 'Microserfs', '1995-01-01', 'Life at Microsoft in the early 1990s.', 5);
 
--- MAPPINGS
+-- BOOK AND AUTHOR RELATIONS
 INSERT INTO T_BookAuthor (bookId, auId) SELECT b.bookId, a.auId FROM T_Book b JOIN T_Author a WHERE b.title='The Witcher' AND a.name='Andrzej Sapkowski';
 INSERT INTO T_BookAuthor (bookId, auId) SELECT b.bookId, a.auId FROM T_Book b JOIN T_Author a WHERE b.title='A Game of Thrones' AND a.name='George R. R. Martin';
 INSERT INTO T_BookAuthor (bookId, auId) SELECT b.bookId, a.auId FROM T_Book b JOIN T_Author a WHERE b.title='Lord of the rings' AND a.name='J. K. Rowling';
@@ -88,6 +106,7 @@ INSERT INTO T_BookAuthor (bookId, auId) SELECT b.bookId, a.auId FROM T_Book b JO
 INSERT INTO T_BookAuthor (bookId, auId) SELECT b.bookId, a.auId FROM T_Book b JOIN T_Author a WHERE b.isbn='3456789012222' AND a.name='Douglas Stuart';
 INSERT INTO T_BookAuthor (bookId, auId) SELECT b.bookId, a.auId FROM T_Book b JOIN T_Author a WHERE b.isbn='3456789123333' AND a.name='Douglas Coupland';
 
+-- BOOK AND GENRE RELATIONS
 INSERT INTO T_BookGenre (bookId, genreId) SELECT b.bookId, g.genreId FROM T_Book b JOIN T_Genre g WHERE b.title='The Witcher' AND g.genre='Fantasy';
 INSERT INTO T_BookGenre (bookId, genreId) SELECT b.bookId, g.genreId FROM T_Book b JOIN T_Genre g WHERE b.title='A Game of Thrones' AND g.genre='Fantasy';
 INSERT INTO T_BookGenre (bookId, genreId) SELECT b.bookId, g.genreId FROM T_Book b JOIN T_Genre g WHERE b.title='Lord of the rings' AND g.genre='Fantasy';

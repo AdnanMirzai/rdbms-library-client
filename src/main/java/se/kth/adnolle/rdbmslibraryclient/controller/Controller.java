@@ -1,6 +1,8 @@
 package se.kth.adnolle.rdbmslibraryclient.controller;
 
 import static javafx.scene.control.Alert.AlertType.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javafx.application.Platform;
@@ -43,10 +45,6 @@ public class Controller implements IViewListener {
      */
     @Override
     public void onSearchSelected(String searchFor, SearchMode mode) {
-        if(searchFor == null || searchFor.isEmpty()) {
-            view.showAlertAndWait("Enter a search string!", WARNING);
-            return;
-        }
         if(!isDBConnected()) {
             view.showAlertAndWait("Not connected to database!", INFORMATION);
             return;
@@ -54,17 +52,25 @@ public class Controller implements IViewListener {
 
         Runnable task = () -> {
             try {
-                List<Book> result = switch (mode) {
-                    case Title -> database.findBooksByTitle(searchFor);
-                    case ISBN -> database.findBooksByIsbn(searchFor);
-                    case Author -> database.findBooksByAuthorName(searchFor);
-                    case Genre -> database.findBooksByGenre(searchFor);
-                    case Rating -> database.findBooksByRating(searchFor);
-                };
+                List<Book> result;
+
+                if (searchFor == null || searchFor.trim().isEmpty()) {
+                    result = database.getAllBooks();
+                } else {
+                    result = switch (mode) {
+                        case Title -> database.findBooksByTitle(searchFor);
+                        case ISBN -> database.findBooksByIsbn(searchFor);
+                        case Author -> database.findBooksByAuthorName(searchFor);
+                        case Genre -> database.findBooksByGenre(searchFor);
+                        case Rating -> database.findBooksByRating(searchFor);
+                    };
+                }
                 if(result == null || result.isEmpty()) {
                     Platform.runLater(() -> view.showAlertAndWait("No results found.", INFORMATION));
+                    Platform.runLater(() -> view.displayBooks(new ArrayList<>()));
+                } else {
+                    Platform.runLater(() -> view.displayBooks(result));
                 }
-                else Platform.runLater(() -> view.displayBooks(result));
             }
             catch (SelectException e) {
                 Platform.runLater(() -> view.showAlertAndWait("Database fetch data error: " + e.getMessage(), ERROR));
