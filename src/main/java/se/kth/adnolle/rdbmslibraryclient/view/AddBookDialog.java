@@ -130,7 +130,7 @@ public class AddBookDialog extends Dialog<Book> {
         boolean validTitle = !titleField.getText().trim().isEmpty();
         boolean validAuthor = authorCheckBox.stream().anyMatch(CheckBox::isSelected);
         boolean validGenre = genreCheckBox.stream().anyMatch(CheckBox::isSelected);
-        addButton.setDisable(!validTitle||!validISBN||!validGenre||!validAuthor);
+        addButton.setDisable(!validTitle||!validGenre||!validAuthor||!validISBN);
     }
 
     private Book createBookFromInput() {

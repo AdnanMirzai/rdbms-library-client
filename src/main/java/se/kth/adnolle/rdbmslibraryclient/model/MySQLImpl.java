@@ -2,6 +2,7 @@ package se.kth.adnolle.rdbmslibraryclient.model;
 
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -133,7 +134,7 @@ public class MySQLImpl implements IBooksDb {
     }
 
     @Override
-    public void rateBook(int bookId, int rating) throws UpdateException {
+    public void reviewBook(int bookId, int rating) throws UpdateException {
         String sql = "UPDATE T_Book SET rating = ? WHERE bookId = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, rating);
@@ -294,6 +295,10 @@ public class MySQLImpl implements IBooksDb {
                 genStmt.executeUpdate();
             }
         }
+    }
+
+    private void insertBookReview(int bookId, int userId, int rating, String reviewText, LocalDate localDate) {
+        String insertBookReview = ""
     }
 
     /**

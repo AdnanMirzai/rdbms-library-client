@@ -11,6 +11,7 @@ import org.bson.conversions.Bson;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 
 import javax.print.Doc;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -123,7 +124,7 @@ public class MongoDbImpl implements IBooksDb {
     }
 
     @Override
-    public void rateBook(int bookId, int rating) throws UpdateException {
+    public void reviewBook(int bookId, int rating) throws UpdateException {
         try {
             Bson filter = Filters.eq("_id", bookId);
             Bson update = Updates.set("rating", rating);

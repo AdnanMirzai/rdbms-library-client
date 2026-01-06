@@ -134,7 +134,7 @@ public class IBooksDbMockImpl implements IBooksDb {
     }
 
     @Override
-    public void rateBook(int bookId, int rating) throws UpdateException {
+    public void reviewBook(int bookId, int rating) throws UpdateException {
         try{
             Thread.sleep(10000);
         } catch(Exception e){}

@@ -181,7 +181,7 @@ public class Controller implements IViewListener {
             if(rating.isPresent()) {
                 Runnable task = () -> {
                     try {
-                        database.rateBook(selectedBook.getBookId(), rating.get());
+                        database.reviewBook(selectedBook.getBookId(), rating.get());
                         Platform.runLater(() -> {
                             onSearchSelected(lastSearchTerm, lastSearchMode);
                         });
