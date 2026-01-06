@@ -61,74 +61,31 @@ public class MongoDbImpl implements IBooksDb {
 
     @Override
     public List<Book> getAllBooks() throws SelectException {
-        List<Book> books = new ArrayList<>();
-        try {
-            try(MongoCursor<Document> cursor = bookCollection.find().iterator()) {
-                while (cursor.hasNext()) {
-                    books.add(convertToBook(cursor.next()));
-                }
-            }
-        } catch (MongoException e) {
-            throw new SelectException(e.getMessage());
-        }
-
-        return books;
+        return executeBookQuery(null);
     }
 
     @Override
     public List<Book> findBooksByTitle(String title) throws SelectException {
-        List<Book> books = new ArrayList<>();
-        try {
-            Bson filter = Filters.regex("title", ".*" + title + ".*", "i");
-            try(MongoCursor<Document> cursor = bookCollection.find(filter).iterator()) {
-                while(cursor.hasNext()) {
-                    books.add(convertToBook(cursor.next()));
-                }
-            }
-        } catch(MongoException e) {
-            throw new SelectException(e.getMessage());
-        }
-        return books;
+        return executeBookQuery(Filters.regex("title", ".*" + title + ".*", "i"));
     }
 
     @Override
     public List<Book> findBooksByIsbn(String isbn) throws SelectException {
-        List<Book> books = new ArrayList<>();
-        try {
-            Bson filter = Filters.eq("isbn", isbn);
-            try(MongoCursor<Document> cursor = bookCollection.find(filter).iterator()) {
-                while(cursor.hasNext()) {
-                    books.add(convertToBook(cursor.next()));
-                }
-            }
-        } catch(MongoException e) {
-            throw new SelectException(e.getMessage());
-        }
-        return books;
+        return executeBookQuery(Filters.eq("isbn", isbn));
     }
 
     @Override
     public List<Book> findBooksByRating(String rating) throws SelectException {
-        List<Book> books = new ArrayList<>();
         try {
             int ratingInt = Integer.parseInt(rating);
-            Bson filter = Filters.eq("rating", ratingInt);
-            try(MongoCursor<Document> cursor = bookCollection.find(filter).iterator()) {
-                while(cursor.hasNext()) {
-                    books.add(convertToBook(cursor.next()));
-                }
-            }
-        } catch(NumberFormatException e) {
-            return books;
-        } catch(MongoException e) {
-            throw new SelectException(e.getMessage());
+            return executeBookQuery(Filters.eq("rating", ratingInt));
+        } catch (NumberFormatException e) {
+            return new ArrayList<>();
         }
-        return books;
     }
 
     @Override
     public List<Book> findBooksByGenre(String genre) throws SelectException {
-        List<Book> books = new ArrayList<>();
         List<Integer> genreIds = new ArrayList<>();
         try {
             Bson filter = Filters.regex("genre", ".*" + genre + ".*", "i");
@@ -137,43 +94,32 @@ public class MongoDbImpl implements IBooksDb {
                     genreIds.add(cursor.next().getInteger("_id"));
                 }
             }
-            if(genreIds.isEmpty()) return books;
-
-            Bson bookFilter = Filters.in("genreIds", genreIds);
-            try(MongoCursor<Document> cursor = bookCollection.find(bookFilter).iterator()) {
-                while(cursor.hasNext()) {
-                    books.add(convertToBook(cursor.next()));
-                }
-            }
         } catch (MongoException e) {
             throw new SelectException(e.getMessage());
         }
-        return books;
+
+        if(genreIds.isEmpty()) return new ArrayList<>();
+
+        return executeBookQuery(Filters.in("genreIds", genreIds));
     }
 
     @Override
     public List<Book> findBooksByAuthorName(String name) throws SelectException {
-        List<Book> books = new ArrayList<>();
         List<Integer> authorIds = new ArrayList<>();
         try {
-            Bson auNameFilter = Filters.regex("name", ".*" + name + ".*", "i"); //i = case insensitive
-            try(MongoCursor<Document> cursor = authorCollection.find(auNameFilter).iterator()) {
+            Bson filter = Filters.regex("name", ".*" + name + ".*", "i");
+            try(MongoCursor<Document> cursor = authorCollection.find(filter).iterator()) {
                 while(cursor.hasNext()) {
                     authorIds.add(cursor.next().getInteger("_id"));
-                }
-            }
-            if(authorIds.isEmpty()) return books;
-
-            Bson BookAuthorFilter = Filters.in("authorIds", authorIds);
-            try(MongoCursor<Document> cursor = bookCollection.find(BookAuthorFilter).iterator()) {
-                while(cursor.hasNext()) {
-                    books.add(convertToBook(cursor.next()));
                 }
             }
         } catch (MongoException e) {
             throw new SelectException(e.getMessage());
         }
-        return books;
+
+        if(authorIds.isEmpty()) return new ArrayList<>();
+
+        return executeBookQuery(Filters.in("authorIds", authorIds));
     }
 
     @Override
@@ -339,5 +285,27 @@ public class MongoDbImpl implements IBooksDb {
         int genreId = doc.getInteger("_id");
         String genre = doc.getString("genre");
         return new Genre(genreId,genre);
+    }
+
+    /**
+     * Generic helper to execute a query against the Books collection.
+     * @param filter The Bson filter to apply. Pass null to find all books.
+     * @return A list of found Books.
+     * @throws SelectException If the query fails.
+     */
+    private List<Book> executeBookQuery(Bson filter) throws SelectException {
+        List<Book> books = new ArrayList<>();
+        try {
+            FindIterable<Document> iterable = (filter == null) ? bookCollection.find() : bookCollection.find(filter);
+
+            try (MongoCursor<Document> cursor = iterable.iterator()) {
+                while (cursor.hasNext()) {
+                    books.add(convertToBook(cursor.next()));
+                }
+            }
+        } catch (MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return books;
     }
 }
