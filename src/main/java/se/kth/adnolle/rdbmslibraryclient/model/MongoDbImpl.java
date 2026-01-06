@@ -9,6 +9,8 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.conversions.Bson;
 
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
+
+import javax.print.Doc;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -59,7 +61,18 @@ public class MongoDbImpl implements IBooksDb {
 
     @Override
     public List<Book> getAllBooks() throws SelectException {
-        return List.of();
+        List<Book> books = new ArrayList<>();
+        try {
+            try(MongoCursor<Document> cursor = bookCollection.find().iterator()) {
+                while (cursor.hasNext()) {
+                    books.add(convertToBook(cursor.next()));
+                }
+            }
+        } catch (MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+
+        return books;
     }
 
     @Override

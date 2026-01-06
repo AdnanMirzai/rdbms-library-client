@@ -13,8 +13,8 @@ import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
-        //IBooksDb database = new MongoDbImpl();
-        IBooksDb database = new MySQLImpl();
+        IBooksDb database = new MongoDbImpl();
+        //IBooksDb database = new MySQLImpl();
         BooksPane view = new BooksPane();
         IViewListener controller = new Controller(database, view);
 
