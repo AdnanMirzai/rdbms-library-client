@@ -7,7 +7,7 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Pair;
 import java.util.Optional;
 
-public class LoginDialog extends Dialog<Pair<String, String>> {
+public class LoginDialog extends Dialog<LoginCredentials> {
 
     public LoginDialog() {
         this.setTitle("Login");
@@ -37,7 +37,7 @@ public class LoginDialog extends Dialog<Pair<String, String>> {
 
         this.setResultConverter(dialogButton -> {
             if (dialogButton == loginButtonType) {
-                return new Pair<>(username.getText(), password.getText());
+                return new LoginCredentials(username.getText(), password.getText());
             }
             return null;
         });

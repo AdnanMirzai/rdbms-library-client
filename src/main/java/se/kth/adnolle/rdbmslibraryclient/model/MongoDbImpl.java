@@ -152,7 +152,7 @@ public class MongoDbImpl implements IBooksDb {
     }
 
     @Override
-    public void reviewBook(int bookId, int rating, User user) throws UpdateException {
+    public void reviewBook(int bookId, int rating, String reviewText, User user) throws UpdateException {
         try {
             Bson filter = Filters.and(Filters.eq("bookId", bookId), Filters.eq("userId", user.getUserId()));
 
@@ -160,10 +160,10 @@ public class MongoDbImpl implements IBooksDb {
                     .append("bookId", bookId)
                     .append("userId", user.getUserId())
                     .append("rating", rating)
+                    .append("reviewText", reviewText)
                     .append("reviewDate", new Date());
 
             reviewCollection.replaceOne(filter, reviewDoc, new ReplaceOptions().upsert(true));
-
 
             List<Bson> pipeline = Arrays.asList(
                     Aggregates.match(Filters.eq("bookId", bookId)),
@@ -175,6 +175,7 @@ public class MongoDbImpl implements IBooksDb {
             if (result != null) {
                 newAverage = result.getDouble("avgRating");
             }
+
             int roundedRating = (int) Math.round(newAverage);
             bookCollection.updateOne(Filters.eq("_id", bookId), Updates.set("rating", roundedRating));
 

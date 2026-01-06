@@ -11,6 +11,9 @@ import se.kth.adnolle.rdbmslibraryclient.model.*;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
 import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
+import se.kth.adnolle.rdbmslibraryclient.view.LoginCredentials;
+import se.kth.adnolle.rdbmslibraryclient.view.ReviewData;
+
 
 /**
  * Controller handles all communication between View and the Model.
@@ -129,11 +132,11 @@ public class Controller implements IViewListener {
     public void onLoginSelected() {
         if (!isDBConnected()) return;
 
-        Optional<Pair<String, String>> credentials = view.showLoginDialog();
+        Optional<LoginCredentials> credentials = view.showLoginDialog();
         credentials.ifPresent(creds -> {
             Runnable task = () -> {
                 try {
-                    User user = database.login(creds.getKey(), creds.getValue());
+                    User user = database.login(creds.username(), creds.password());
 
                     if (user == null) {
                         throw new LoginException("Invalid username or password.");
@@ -210,7 +213,7 @@ public class Controller implements IViewListener {
      * @param selectedBook The selected book to be rated.
      */
     @Override
-    public void onRateBookSelected(Book selectedBook) {
+    public void onReviewBookSelected(Book selectedBook) {
         if (currentUser == null) {
             view.showAlertAndWait("You must log in to rate books.", WARNING);
             return;
@@ -220,15 +223,21 @@ public class Controller implements IViewListener {
             view.showAlertAndWait("Not connected to database!", INFORMATION);
             return;
         }
+
         if(selectedBook != null) {
-            Optional<Integer> rating = view.showRateBookDialog(selectedBook);
-            if(rating.isPresent()) {
+            Optional<ReviewData> result = view.showReviewDialog(selectedBook);
+
+            result.ifPresent(review -> {
+                int rating = review.rating();
+                String text = review.text();
+
                 Runnable task = () -> {
                     try {
-                        database.reviewBook(selectedBook.getBookId(), rating.get(), currentUser);
+                        database.reviewBook(selectedBook.getBookId(), rating, text, currentUser);
 
                         Platform.runLater(() -> {
                             onSearchSelected(lastSearchTerm, lastSearchMode);
+                            view.showAlertAndWait("Review submitted!", INFORMATION);
                         });
                     }
                     catch (Exception e) {
@@ -237,7 +246,7 @@ public class Controller implements IViewListener {
                 };
                 Thread rateWorker = new Thread(task);
                 rateWorker.start();
-            }
+            });
         }
         else view.showAlertAndWait("Select a book to rate", INFORMATION);
     }

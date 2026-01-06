@@ -31,9 +31,9 @@ db.reviews.createIndex({ bookId: 1, userId: 1 }, { unique: true });
 
 // Seed reviews (Matches the SQL data)
 db.reviews.insertMany([
-    { bookId: 1, userId: 2, rating: 4, reviewDate: ISODate("2023-01-15") },
-    { bookId: 2, userId: 2, rating: 5, reviewDate: ISODate("2023-01-20") },
-    { bookId: 6, userId: 3, rating: 1, reviewDate: ISODate("2023-02-10") }
+    { bookId: 1, userId: 2, rating: 4, reviewText: "Great world building, but slow start.", reviewDate: ISODate("2023-01-15") },
+    { bookId: 2, userId: 2, rating: 5, reviewText: "Cannot put it down!", reviewDate: ISODate("2023-01-20") },
+    { bookId: 6, userId: 3, rating: 1, reviewText: "Too scary for me.", reviewDate: ISODate("2023-02-10") }
 ]);
 
 // 5. Genres

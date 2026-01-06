@@ -104,7 +104,7 @@ public interface IBooksDb {
      * @param rating The new rating (1-5).
      * @throws UpdateException If the update fails.
      */
-    void reviewBook(int bookId, int rating, User user) throws UpdateException;
+    void reviewBook(int bookId, int rating, String reviewText, User user) throws UpdateException;
 
     /**
      * Retrieves all available authors from the database.

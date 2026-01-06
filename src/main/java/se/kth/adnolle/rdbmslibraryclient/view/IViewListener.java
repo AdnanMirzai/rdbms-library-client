@@ -41,7 +41,7 @@ public interface IViewListener {
     /**
      * Called when the user wants to update rating for a book in DB.
      */
-    void onRateBookSelected(Book selectedBook);
+    void onReviewBookSelected(Book selectedBook);
 
     /**
      * Called when the user wants to exit application.

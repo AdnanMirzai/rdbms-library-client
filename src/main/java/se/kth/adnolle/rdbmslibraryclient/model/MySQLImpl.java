@@ -19,7 +19,7 @@ public class MySQLImpl implements IBooksDb {
 
         String url = "jdbc:mysql://localhost:3306/" + database + "?UseClientEnc=UTF8";
         try {
-            connection = DriverManager.getConnection(url);
+            connection = DriverManager.getConnection(url, username, password);
             return true;
         } catch (SQLException e) {
             throw new ConnectionException(e.getMessage());
@@ -32,7 +32,7 @@ public class MySQLImpl implements IBooksDb {
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, username);
-            stmt.setString(2, password); // In a real app, hash this password before checking!
+            stmt.setString(2, password);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -69,48 +69,63 @@ public class MySQLImpl implements IBooksDb {
         else return false;
     }
 
+    // BASE QUERY: Calculates Average Rating on the fly
+    // We use LEFT JOIN so books without reviews still show up (rating will be 0 or null)
+    private static final String BASE_SELECT =
+            "SELECT B.bookId, B.isbn, B.title, B.published, B.storyLine, " +
+                    "ROUND(AVG(R.rating)) as rating " +
+                    "FROM T_Book B " +
+                    "LEFT JOIN T_Review R ON B.bookId = R.bookId ";
+
+    private static final String GROUP_BY = " GROUP BY B.bookId";
+
     @Override
     public List<Book> getAllBooks() throws SelectException {
-        return executeQuery("SELECT * FROM T_Book WHERE title LIKE ?", "%");
+        String sql = BASE_SELECT + GROUP_BY;
+        return executeQuery(sql, null);
     }
-
 
     @Override
     public List<Book> findBooksByTitle(String title) throws SelectException {
-        return executeQuery("SELECT * FROM T_Book WHERE title LIKE ?", "%" + title + "%");
+        String sql = BASE_SELECT + " WHERE B.title LIKE ? " + GROUP_BY;
+        return executeQuery(sql, "%" + title + "%");
     }
 
     @Override
     public List<Book> findBooksByIsbn(String isbn) throws SelectException {
-        return executeQuery("SELECT * FROM T_Book WHERE isbn = ?", isbn);
+        String sql = BASE_SELECT + " WHERE B.isbn = ? " + GROUP_BY;
+        return executeQuery(sql, isbn);
     }
 
     @Override
     public List<Book> findBooksByAuthorName(String name) throws SelectException {
-        String sql = "SELECT B.* FROM T_Book AS B " +
-                "JOIN T_BookAuthor AS BA ON B.bookId = BA.bookId " +
-                "JOIN T_Author AS A ON BA.auId = A.auId " +
-                "WHERE A.name LIKE ?";
+        String sql = BASE_SELECT +
+                " JOIN T_BookAuthor BA ON B.bookId = BA.bookId " +
+                " JOIN T_Author A ON BA.auId = A.auId " +
+                " WHERE A.name LIKE ? " + GROUP_BY;
         return executeQuery(sql, "%" + name + "%");
     }
 
     @Override
-    public List<Book> findBooksByRating(String rating) throws SelectException {
-        return executeQuery("SELECT * FROM T_Book WHERE rating = ?", rating);
-    }
-
-    @Override
     public List<Book> findBooksByGenre(String genre) throws SelectException {
-        String sql = "SELECT B.* FROM T_Book AS B " +
-                "JOIN T_BookGenre AS BG ON B.bookId = BG.bookId " +
-                "JOIN T_Genre AS G ON BG.genreId = G.genreId " +
-                "WHERE G.genre LIKE ?";
+        String sql = BASE_SELECT +
+                " JOIN T_BookGenre BG ON B.bookId = BG.bookId " +
+                " JOIN T_Genre G ON BG.genreId = G.genreId " +
+                " WHERE G.genre LIKE ? " + GROUP_BY;
         return executeQuery(sql, "%" + genre + "%");
     }
 
     @Override
+    public List<Book> findBooksByRating(String rating) throws SelectException {
+        // HAVING clause is required because we are filtering on an aggregate function (AVG)
+        String sql = BASE_SELECT + GROUP_BY + " HAVING rating = ?";
+        return executeQuery(sql, rating);
+    }
+
+    @Override
     public void addBook(Book book, List<Author> authors, List<Genre> genres, int addedBy) throws InsertException {
-        String insertBook = "INSERT INTO T_Book (isbn, title, published, storyLine, rating) VALUES (?,?,?,?,?)";
+        // We do NOT insert 'rating' here anymore
+        String insertBook = "INSERT INTO T_Book (isbn, title, published, storyLine, addedBy) VALUES (?,?,?,?,?)";
         int bookId = -1;
         try {
             connection.setAutoCommit(false);
@@ -118,12 +133,12 @@ public class MySQLImpl implements IBooksDb {
                 stmt.setString(1, book.getIsbn());
                 stmt.setString(2, book.getTitle());
                 stmt.setDate(3, book.getPublished());
+
                 if (book.getStoryLine() != null && !book.getStoryLine().isEmpty())
                     stmt.setString(4, book.getStoryLine());
                 else stmt.setNull(4, Types.VARCHAR);
 
-                if (book.getRating() != 0) stmt.setInt(5, book.getRating());
-                else stmt.setNull(5, Types.NULL);
+                stmt.setInt(5, addedBy);
 
                 stmt.executeUpdate();
                 ResultSet rs = stmt.getGeneratedKeys();
@@ -152,16 +167,18 @@ public class MySQLImpl implements IBooksDb {
     }
 
     @Override
-    public void reviewBook(int bookId, int rating, User user) throws UpdateException {
-        String sql = "UPDATE T_Book SET rating = ? WHERE bookId = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, rating);
+    public void reviewBook(int bookId, int rating, String reviewText, User user) throws UpdateException {
+        // Simply insert/update the review.
+        // We do NOT update T_Book, because the rating is calculated dynamically in the SELECT queries.
+        String upsertReview = "INSERT INTO T_Review (bookId, userId, rating, reviewDate) VALUES (?, ?, ?, CURDATE()) " +
+                "ON DUPLICATE KEY UPDATE rating = VALUES(rating), reviewDate = VALUES(reviewDate)";
+
+        try (PreparedStatement stmt = connection.prepareStatement(upsertReview)) {
+            stmt.setInt(1, bookId);
             stmt.setInt(2, user.getUserId());
             stmt.setInt(3, rating);
-            stmt.setInt(4, rating);
             stmt.executeUpdate();
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             throw new UpdateException("Failed to add review: " + e.getMessage());
         }
     }
@@ -191,7 +208,7 @@ public class MySQLImpl implements IBooksDb {
 
         String sql = "SELECT * FROM T_Genre";
         try (Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery(sql)) {
+             ResultSet rs = stmt.executeQuery(sql)) {
             while(rs.next()) {
                 int genreId = rs.getInt("genreId");
                 String genre = rs.getString("genre");
@@ -203,22 +220,13 @@ public class MySQLImpl implements IBooksDb {
         return genres;
     }
 
-    //Private helper methods
-
-    /**
-     * Helper method to get all authors for a book.
-     * Executes a JOIN query between T_Author and table T_BookAuthor.
-     * @param bookId The unique ID of the book.
-     * @return A list of Author objects associated with the book.
-     * @throws SQLException If the SQL query fails.
-     */
     private List<Author> getAuthorsForBook(int bookId) throws SQLException {
         List<Author> authors = new ArrayList<>();
 
         String sql =
                 "SELECT * FROM T_Author AS A " +
-                "JOIN T_BookAuthor AS BA ON A.auId = BA.auId " +
-                "WHERE BA.bookId = ?";
+                        "JOIN T_BookAuthor AS BA ON A.auId = BA.auId " +
+                        "WHERE BA.bookId = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1,bookId);
@@ -234,20 +242,13 @@ public class MySQLImpl implements IBooksDb {
         return authors;
     }
 
-    /**
-     * Helper method to get all genres for a book.
-     * Executes a JOIN query between T_Genre and table T_BookGenre.
-     * @param bookId The unique ID of the book.
-     * @return A list of Author objects associated with the book.
-     * @throws SQLException If the SQL query fails.
-     */
     private List<Genre> getGenresForBook(int bookId) throws SQLException {
         List<Genre> genres = new ArrayList<>();
 
         String sql =
                 "SELECT G.genreId, G.genre FROM T_Genre AS G " +
-                "JOIN T_BookGenre AS BG ON G.genreId = BG.genreId " +
-                "WHERE BG.bookId = ?";
+                        "JOIN T_BookGenre AS BG ON G.genreId = BG.genreId " +
+                        "WHERE BG.bookId = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1,bookId);
@@ -262,18 +263,13 @@ public class MySQLImpl implements IBooksDb {
         return genres;
     }
 
-    /**
-     * Converts the current row of a ResultSet to a Book object.
-     * @param rs The ResultSet positioned at the current row.
-     * @return A fully populated Book object.
-     * @throws SQLException If a database access error occurs or the column labels are invalid.
-     */
     private Book convertToBook(ResultSet rs) throws SQLException {
         int bookId = rs.getInt("bookId");
         String isbn = rs.getString("isbn");
         String title = rs.getString("title");
         Date published = rs.getDate("published");
         String storyLine = rs.getString("storyLine");
+        // This 'rating' now comes from the calculated field in the SQL query
         int rating = rs.getInt("rating");
         List<Author> authors = getAuthorsForBook(bookId);
         List<Genre> genres = getGenresForBook(bookId);
@@ -281,13 +277,6 @@ public class MySQLImpl implements IBooksDb {
         return new Book(bookId, isbn, title, published, storyLine, rating, authors, genres);
     }
 
-    /**
-     * Helper method to link authors to a newly created book.
-     * Inserts rows into the table T_BookAuthor.
-     * @param authors The list of authors to associate with the book.
-     * @param bookId The ID of the newly created book.
-     * @throws SQLException If the insertion fails.
-     */
     private void addBookAuthor(List<Author> authors, int bookId) throws SQLException {
         String insertBookAuthor = "INSERT INTO T_BookAuthor (auId, bookId) VALUES (?,?)";
         try (PreparedStatement auStmt = connection.prepareStatement(insertBookAuthor)) {
@@ -299,13 +288,6 @@ public class MySQLImpl implements IBooksDb {
         }
     }
 
-    /**
-     * Helper method to link genres to a newly created book.
-     * Inserts rows into the table T_BookGenre.
-     * @param genres The list of genres to associate with the book.
-     * @param bookId The ID of the newly created book.
-     * @throws SQLException If the insertion fails.
-     */
     private void addBookGenre(List<Genre> genres, int bookId) throws SQLException {
         String insertBookGenre = "INSERT INTO T_BookGenre (genreId, bookId) VALUES (?,?)";
         try (PreparedStatement genStmt = connection.prepareStatement(insertBookGenre)) {
@@ -317,21 +299,11 @@ public class MySQLImpl implements IBooksDb {
         }
     }
 
-    private void insertBookReview(int bookId, int userId, int rating, String reviewText, LocalDate localDate) {
-        String insertBookReview = "";
-    }
-
-    /**
-     * Generic helper to execute a SELECT query with one String parameter.
-     * @param sql The SQL query with one '?' placeholder.
-     * @param parameter The string value to put in the placeholder.
-     * @return A list of found Books.
-     * @throws SelectException If the query fails.
-     */
     private List<Book> executeQuery(String sql, String parameter) throws SelectException {
         List<Book> books = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, parameter);
+            if(parameter != null) stmt.setString(1, parameter);
+
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     books.add(convertToBook(rs));

@@ -66,11 +66,9 @@ public class BooksPane extends VBox {
         return addBookDialog.showAndWait();
     }
 
-    public Optional<Integer> showRateBookDialog(Book selectedBook) {
-        ChoiceDialog<Integer> cd = new ChoiceDialog<>(null,1,2,3,4,5);
-        cd.setTitle("Rate Book");
-        cd.setHeaderText("Choose a rating");
-        return cd.showAndWait();
+    public Optional<ReviewData> showReviewDialog(Book selectedBook) {
+        ReviewDialog dialog = new ReviewDialog(selectedBook.getTitle());
+        return dialog.showAndWait();
     }
 
     private void initSearchView() {
@@ -167,7 +165,7 @@ public class BooksPane extends VBox {
         addItem.setOnAction(_ -> controller.onAddBookSelected());
         rateItem.setOnAction(_ -> {
             Book selectedBook = booksTable.getSelectionModel().getSelectedItem();
-            controller.onRateBookSelected(selectedBook);
+            controller.onReviewBookSelected(selectedBook);
         });
     }
 
@@ -193,7 +191,7 @@ public class BooksPane extends VBox {
         VBox.setVgrow(mainPane, Priority.ALWAYS);
     }
 
-    public Optional<Pair<String, String>> showLoginDialog() {
+    public Optional<LoginCredentials> showLoginDialog() {
         LoginDialog dialog = new LoginDialog();
         return dialog.showAndWait();
     }

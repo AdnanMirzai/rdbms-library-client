@@ -1,18 +1,12 @@
--- ==========================================
--- 1. SETUP DATABASE & USERS
--- ==========================================
-CREATE DATABASE IF NOT EXISTS LibraryDB;
+DROP DATABASE IF EXISTS LibraryDB;
+CREATE DATABASE LibraryDB;
 USE LibraryDB;
 
--- Create the user with '%' to allow access from your Java Client
 CREATE USER IF NOT EXISTS 'DB_clientApp'@'%' IDENTIFIED BY 'ABC.123';
 GRANT ALL PRIVILEGES ON LibraryDB.* TO 'DB_clientApp'@'%';
 FLUSH PRIVILEGES;
 
--- ==========================================
--- 2. CREATE TABLES (DDL)
--- ==========================================
-
+-- 1. USERS
 CREATE TABLE T_User (
     userId INT AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -20,6 +14,24 @@ CREATE TABLE T_User (
     PRIMARY KEY (userId)
 );
 
+-- 2. AUTHORS
+CREATE TABLE T_Author (
+    auId INT AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    dob DATE,
+    addedBy INT,
+    PRIMARY KEY (auId),
+    CONSTRAINT auth_addedBy FOREIGN KEY (addedBy) REFERENCES T_User(userId) ON DELETE SET NULL
+);
+
+-- 3. GENRE
+CREATE TABLE T_Genre (
+    genreId INT AUTO_INCREMENT,
+    genre VARCHAR(50) NOT NULL,
+    PRIMARY KEY(genreId)
+);
+
+-- 4. BOOKS (NO RATING COLUMN)
 CREATE TABLE T_Book (
     bookId INT AUTO_INCREMENT,
     isbn CHAR(13) NOT NULL UNIQUE,
@@ -32,86 +44,47 @@ CREATE TABLE T_Book (
     CONSTRAINT book_addedBy FOREIGN KEY (addedBy) REFERENCES T_User(userId) ON DELETE SET NULL
 );
 
+-- 5. REVIEWS
 CREATE TABLE T_Review (
     bookId INT NOT NULL,
     userId INT NOT NULL,
     rating TINYINT NOT NULL,
-    reviewText VARCHAR(500),
     reviewDate DATE NOT NULL,
-
     CHECK (rating >= 1 AND rating <= 5),
-
     PRIMARY KEY (bookId, userId),
-
-    CONSTRAINT fk_review_book FOREIGN KEY (bookId)
-        REFERENCES T_Book(bookId) ON DELETE CASCADE,
-    CONSTRAINT fk_review_user FOREIGN KEY (userId)
-        REFERENCES T_User(userId) ON DELETE CASCADE
+    CONSTRAINT fk_review_book FOREIGN KEY (bookId) REFERENCES T_Book(bookId) ON DELETE CASCADE,
+    CONSTRAINT fk_review_user FOREIGN KEY (userId) REFERENCES T_User(userId) ON DELETE CASCADE
 );
 
-CREATE TABLE T_Genre (
-    genreId INT AUTO_INCREMENT,
-    genre VARCHAR(50) NOT NULL,
-    PRIMARY KEY(genreId)
-);
-
-CREATE TABLE T_Author (
-    auId INT AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    dob DATE,
-    addedBy INT,
-    PRIMARY KEY (auId),
-    CONSTRAINT auth_addedBy FOREIGN KEY (addedBy) REFERENCES T_User(userId) ON DELETE SET NULL
-);
-
+-- 6. JUNCTION TABLES
 CREATE TABLE T_BookGenre (
     genreId INT NOT NULL,
     bookId INT NOT NULL,
     PRIMARY KEY(genreId, bookId),
-    CONSTRAINT hasGenre_genre_id FOREIGN KEY (genreId)
-        REFERENCES T_Genre(genreId)
-        ON DELETE CASCADE,
-    CONSTRAINT hasGenre_bookId FOREIGN KEY (bookId)
-        REFERENCES T_Book(bookId)
-        ON DELETE CASCADE
+    CONSTRAINT hasGenre_genre_id FOREIGN KEY (genreId) REFERENCES T_Genre(genreId) ON DELETE CASCADE,
+    CONSTRAINT hasGenre_bookId FOREIGN KEY (bookId) REFERENCES T_Book(bookId) ON DELETE CASCADE
 );
 
 CREATE TABLE T_BookAuthor (
     auId INT NOT NULL,
     bookId INT NOT NULL,
     PRIMARY KEY(auId, bookId),
-    CONSTRAINT writes_auId FOREIGN KEY (auId)
-        REFERENCES T_Author(auId)
-        ON DELETE CASCADE,
-    CONSTRAINT writes_bookId FOREIGN KEY (bookId)
-        REFERENCES T_Book(bookId)
-        ON DELETE CASCADE
+    CONSTRAINT writes_auId FOREIGN KEY (auId) REFERENCES T_Author(auId) ON DELETE CASCADE,
+    CONSTRAINT writes_bookId FOREIGN KEY (bookId) REFERENCES T_Book(bookId) ON DELETE CASCADE
 );
 
--- ==========================================
--- 3. INSERT DATA (DML)
--- ==========================================
+-- INSERT DATA
 START TRANSACTION;
 
-INSERT INTO T_User (username, password) VALUES
-('admin', 'secret'),
-('booklover99', 'password'),
-('student_bob', '12345');
+INSERT INTO T_User (username, password) VALUES ('admin', 'secret'), ('booklover99', 'password'), ('student_bob', '12345');
 
--- 3. AUTHORS (Linked to 'admin' user with ID 1)
+INSERT INTO T_Genre (genre) VALUES ('Fantasy'), ('Action'), ('Database'), ('Fiction'), ('Literary Fiction'), ('Dystopian'), ('Historical Fiction'), ('Contemporary');
+
 INSERT INTO T_Author (name, DOB, addedBy) VALUES
-('Andrzej Sapkowski', NULL, 1),
-('George R. R. Martin', NULL, 1),
-('J. K. Rowling', NULL, 1),
-('C. S. Lewis', NULL, 1),
-('Catherine Ricardo', '1999-11-11', 1),
-('Susan Ullman', '1999-11-11', 1),
-('Kazuo Ishiguro', '1999-11-11', 1),
-('Margaret Atwood', '1999-11-11', 1),
-('Douglas Stuart', '1999-11-11', 1),
-('Douglas Coupland', '1999-11-11', 1);
+('Andrzej Sapkowski', NULL, 1), ('George R. R. Martin', NULL, 1), ('J. K. Rowling', NULL, 1), ('C. S. Lewis', NULL, 1),
+('Catherine Ricardo', '1999-11-11', 1), ('Susan Ullman', '1999-11-11', 1), ('Kazuo Ishiguro', '1999-11-11', 1),
+('Margaret Atwood', '1999-11-11', 1), ('Douglas Stuart', '1999-11-11', 1), ('Douglas Coupland', '1999-11-11', 1);
 
--- 4. BOOKS (Linked to 'admin' user with ID 1)
 INSERT INTO T_Book (isbn, title, published, storyLine, addedBy) VALUES
 ('1000800091730', 'The Witcher', '1999-09-01', 'En monsterjägare letar efter sitt öde.', 1),
 ('9780553103540', 'A Game of Thrones', '1996-08-06', 'Vinter kommer och alla bråkar om en stol.', 1),
@@ -127,7 +100,6 @@ INSERT INTO T_Book (isbn, title, published, storyLine, addedBy) VALUES
 ('3456789012222', 'Shuggie Bain', '2020-01-01', 'A story of growing up in 1980s Glasgow.', 1),
 ('3456789123333', 'Microserfs', '1995-01-01', 'Life at Microsoft in the early 1990s.', 1);
 
--- 5. RELATIONS (Author/Genre)
 INSERT INTO T_BookAuthor (bookId, auId) SELECT b.bookId, a.auId FROM T_Book b JOIN T_Author a WHERE b.title='The Witcher' AND a.name='Andrzej Sapkowski';
 INSERT INTO T_BookAuthor (bookId, auId) SELECT b.bookId, a.auId FROM T_Book b JOIN T_Author a WHERE b.title='A Game of Thrones' AND a.name='George R. R. Martin';
 INSERT INTO T_BookAuthor (bookId, auId) SELECT b.bookId, a.auId FROM T_Book b JOIN T_Author a WHERE b.title='Lord of the rings' AND a.name='J. K. Rowling';
@@ -150,14 +122,9 @@ INSERT INTO T_BookGenre (bookId, genreId) SELECT b.bookId, g.genreId FROM T_Book
 INSERT INTO T_BookGenre (bookId, genreId) SELECT b.bookId, g.genreId FROM T_Book b JOIN T_Genre g WHERE b.isbn IN ('6789012345678', '2345678900000') AND g.genre='Historical Fiction';
 INSERT INTO T_BookGenre (bookId, genreId) SELECT b.bookId, g.genreId FROM T_Book b JOIN T_Genre g WHERE b.isbn IN ('3456789012222', '3456789123333') AND g.genre='Contemporary';
 
--- 6. INSERT REVIEWS
-INSERT INTO T_Review (bookId, userId, rating, reviewText, reviewDate)
-SELECT bookId, 2, 4, 'Great fantasy world!', '2023-01-15' FROM T_Book WHERE title='The Witcher';
-
-INSERT INTO T_Review (bookId, userId, rating, reviewText, reviewDate)
-SELECT bookId, 2, 5, 'Classic.', '2023-01-20' FROM T_Book WHERE title='A Game of Thrones';
-
-INSERT INTO T_Review (bookId, userId, rating, reviewText, reviewDate)
-SELECT bookId, 3, 1, 'Too scary for me.', '2023-02-10' FROM T_Book WHERE title='Dark Databases';
+-- INSERT REVIEWS
+INSERT INTO T_Review (bookId, userId, rating, reviewDate) SELECT bookId, 2, 4, '2023-01-15' FROM T_Book WHERE title='The Witcher';
+INSERT INTO T_Review (bookId, userId, rating, reviewDate) SELECT bookId, 2, 5, '2023-01-20' FROM T_Book WHERE title='A Game of Thrones';
+INSERT INTO T_Review (bookId, userId, rating, reviewDate) SELECT bookId, 3, 1, '2023-02-10' FROM T_Book WHERE title='Dark Databases';
 
 COMMIT;
