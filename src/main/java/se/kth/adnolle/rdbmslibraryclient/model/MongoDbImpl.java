@@ -5,6 +5,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
+import com.mongodb.client.result.DeleteResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
@@ -277,6 +278,21 @@ public class MongoDbImpl implements IBooksDb {
             throw new SelectException(e.getMessage());
         }
         return genres;
+    }
+
+    @Override
+    public void deleteBook(int bookId) throws DeleteException {
+        try {
+            reviewCollection.deleteMany(Filters.eq("bookId", bookId));
+
+            DeleteResult result = bookCollection.deleteOne(Filters.eq("_id", bookId));
+
+            if (result.getDeletedCount() == 0) {
+                throw new DeleteException("Book not found or already deleted.");
+            }
+        } catch (MongoException e) {
+            throw new DeleteException("Database error during deletion: " + e.getMessage());
+        }
     }
 
     //Helpers

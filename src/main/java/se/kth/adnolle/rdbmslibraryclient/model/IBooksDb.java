@@ -135,4 +135,6 @@ public interface IBooksDb {
      * @throws SelectException If an error occurs during retrieval.
      */
     List<Genre> getAllGenres() throws SelectException;
+
+    void deleteBook(int bookId) throws DeleteException;
 }

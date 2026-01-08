@@ -1,4 +1,4 @@
-package se.kth.adnolle.rdbmslibraryclient.model;
+/*package se.kth.adnolle.rdbmslibraryclient.model;
 
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 
@@ -315,4 +315,4 @@ public class MySQLImpl implements IBooksDb {
         }
         return books;
     }
-}
+}*/
