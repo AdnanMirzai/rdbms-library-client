@@ -45,16 +45,14 @@ db.createUser({
     roles: [{ role: "clientAppRole", db: "LibraryDB" }]
 });
 
-// 2. Create Counters
 db.createCollection("counters");
 db.counters.insertMany([
     { _id: "bookId", seq: 13 },
     { _id: "genreId", seq: 8 },
     { _id: "auId", seq: 10 },
-    { _id: "userId", seq: 3 } // New counter for users
+    { _id: "userId", seq: 3 }
 ]);
 
-// 3. Create Users (Actual App Users)
 db.createCollection("users");
 db.users.insertMany([
     { _id: 1, username: "admin", password: "secret" },
@@ -62,19 +60,15 @@ db.users.insertMany([
     { _id: 3, username: "student_bob", password: "12345" }
 ]);
 
-// 4. Create Reviews Collection
-// We create a Compound Index to ensure ONE review per user per book
 db.createCollection("reviews");
 db.reviews.createIndex({ bookId: 1, userId: 1 }, { unique: true });
 
-// Seed reviews (Matches the SQL data)
 db.reviews.insertMany([
     { bookId: 1, userId: 2, rating: 4, reviewText: "Great world building, but slow start.", reviewDate: ISODate("2023-01-15") },
     { bookId: 2, userId: 2, rating: 5, reviewText: "Cannot put it down!", reviewDate: ISODate("2023-01-20") },
     { bookId: 6, userId: 3, rating: 1, reviewText: "Too scary for me.", reviewDate: ISODate("2023-02-10") }
 ]);
 
-// 5. Genres
 db.createCollection("genres");
 db.genres.insertMany([
     { _id: 1, genre: "Fantasy" },
@@ -87,7 +81,6 @@ db.genres.insertMany([
     { _id: 8, genre: "Contemporary" }
 ]);
 
-// 6. Authors (Added 'addedBy' field pointing to admin)
 db.createCollection("authors");
 db.authors.insertMany([
     { _id: 1, name: "Andrzej Sapkowski", dob: null, addedBy: 1 },
@@ -102,11 +95,7 @@ db.authors.insertMany([
     { _id: 10, name: "Douglas Coupland", dob: ISODate("1999-11-11"), addedBy: 1 }
 ]);
 
-// 7. Books
-// Added 'addedBy': 1
-// Kept 'rating' as a CACHED field (calculated from reviews).
-// e.g. Book 1 has one review of 4, so rating is 4.
-// e.g. Book 6 has one review of 1, so rating is 1.
+
 db.createCollection("books");
 db.books.insertMany([
     {
