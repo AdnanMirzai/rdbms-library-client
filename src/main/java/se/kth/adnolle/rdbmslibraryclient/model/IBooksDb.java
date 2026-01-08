@@ -1,6 +1,7 @@
 package se.kth.adnolle.rdbmslibraryclient.model;
 
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
+
 import java.util.List;
 
 /**
@@ -16,6 +17,7 @@ public interface IBooksDb {
 
     /**
      * Connect to the database.
+     *
      * @param database name of database to connect to
      * @return true on successful connection
      * @throws ConnectionException If a connection error occurs.
@@ -26,12 +28,14 @@ public interface IBooksDb {
 
     /**
      * Closes the connection to the database.
+     *
      * @throws ConnectionException If an error occurs while closing the connection.
      */
     void disconnect() throws ConnectionException;
 
     /**
      * Checks if there is an active connection to the database.
+     *
      * @return true if connected.
      * @throws ConnectionException If the status could not be determined.
      */
@@ -39,6 +43,7 @@ public interface IBooksDb {
 
     /**
      * Searches for all books if the search string is empty
+     *
      * @return All books
      * @throws SelectException
      */
@@ -48,6 +53,7 @@ public interface IBooksDb {
     /**
      * Searches for books matching the given title.
      * Partial matches are supported.
+     *
      * @param title The title to search for.
      * @return A list of matching Book objects, or an empty list if no matches found.
      * @throws SelectException If an error occurs during the database query.
@@ -56,6 +62,7 @@ public interface IBooksDb {
 
     /**
      * Searches for books matching the given isbn.
+     *
      * @param isbn to search for. Exact isbn.
      * @return A list of matching Book objects, or an empty list if no matches found.
      * @throws SelectException If an error occurs during the database query.
@@ -65,6 +72,7 @@ public interface IBooksDb {
     /**
      * Searches for books matching the given Author name.
      * Partial matches are supported.
+     *
      * @param name The Author name to search for.
      * @return A list of matching Book objects, or an empty list if no matches found.
      * @throws SelectException If an error occurs during the database query.
@@ -73,6 +81,7 @@ public interface IBooksDb {
 
     /**
      * Searches for books matching the given rating.
+     *
      * @param rating to search for. Exact rating.
      * @return A list of matching Book objects, or an empty list if no matches found.
      * @throws SelectException If an error occurs during the database query.
@@ -82,6 +91,7 @@ public interface IBooksDb {
     /**
      * Searches for books matching the given genre.
      * Partial matches are supported.
+     *
      * @param genre The genre to search for.
      * @return A list of matching Book objects, or an empty list if no matches found.
      * @throws SelectException If an error occurs during the database query.
@@ -91,15 +101,17 @@ public interface IBooksDb {
     /**
      * Adds a new book along with its relations BookAuthors and BookGenres to the database.
      * Transaction is used in this method, if any part fails, the entire operation is rolled back.
-     * @param book The Book object containing info about book.
+     *
+     * @param book    The Book object containing info about book.
      * @param authors A list of Author objects associated with the book.
-     * @param genres A list of Genre objects associated with the book.
+     * @param genres  A list of Genre objects associated with the book.
      * @throws InsertException If the book could not be added.
      */
     void addBook(Book book, List<Author> authors, List<Genre> genres, int addedBy) throws InsertException;
 
     /**
      * Updates the rating for a specific book.
+     *
      * @param bookId The unique ID of the book to rate.
      * @param rating The new rating (1-5).
      * @throws UpdateException If the update fails.
@@ -108,6 +120,7 @@ public interface IBooksDb {
 
     /**
      * Retrieves all available authors from the database.
+     *
      * @return A list of all Author objects.
      * @throws SelectException If an error occurs during retrieval.
      */
@@ -115,6 +128,7 @@ public interface IBooksDb {
 
     /**
      * Retrieves all available genres from the database.
+     *
      * @return A list of all Genre objects.
      * @throws SelectException If an error occurs during retrieval.
      */

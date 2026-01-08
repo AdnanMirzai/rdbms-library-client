@@ -6,6 +6,7 @@ import java.util.List;
 
 /**
  * Representation of a Book.
+ *
  * @author adnolle@kth.se
  */
 public class Book {
@@ -22,7 +23,7 @@ public class Book {
     public Book(int bookId, String isbn, String title, Date published,
                 String storyLine, Integer rating, List<Author> authors, List<Genre> genres) throws IllegalArgumentException {
 
-        if(!isbn.matches("\\d{13}")) throw new IllegalArgumentException();
+        if (!isbn.matches("\\d{13}")) throw new IllegalArgumentException();
         this.bookId = bookId;
         this.isbn = isbn;
         this.title = title;
@@ -39,14 +40,37 @@ public class Book {
     }
 
     // Getters
-    public int getBookId() { return bookId; }
-    public String getIsbn() { return isbn; }
-    public String getTitle() { return title; }
-    public Date getPublished() { return published; }
-    public String getStoryLine() { return storyLine; }
-    public Integer getRating() { return rating; }
-    public List<Author> getAuthors() { return Collections.unmodifiableList(authors); }
-    public List<Genre> getGenres() { return Collections.unmodifiableList(genres); }
+    public int getBookId() {
+        return bookId;
+    }
+
+    public String getIsbn() {
+        return isbn;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public Date getPublished() {
+        return published;
+    }
+
+    public String getStoryLine() {
+        return storyLine;
+    }
+
+    public Integer getRating() {
+        return rating;
+    }
+
+    public List<Author> getAuthors() {
+        return Collections.unmodifiableList(authors);
+    }
+
+    public List<Genre> getGenres() {
+        return Collections.unmodifiableList(genres);
+    }
 
     @Override
     public String toString() {

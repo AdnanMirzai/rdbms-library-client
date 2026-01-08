@@ -5,6 +5,7 @@ import java.sql.Date;
 /**
  * Representation of an object model Author.
  * with auId, name and DOB attributes
+ *
  * @author adnolle@kth.se
  */
 public class Author {
@@ -22,10 +23,20 @@ public class Author {
         this(-1, name, DOB);
     }
 
-    public int getAuId() { return auId; }
-    public String getName() { return name; }
-    public Date getDOB() { return DOB; }
+    public int getAuId() {
+        return auId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Date getDOB() {
+        return DOB;
+    }
 
     @Override
-    public String toString() { return "AuthorID: " + auId + "\nAuthor Name: " + name + "\nDate of birth: " + DOB; }
+    public String toString() {
+        return "AuthorID: " + auId + "\nAuthor Name: " + name + "\nDate of birth: " + DOB;
+    }
 }

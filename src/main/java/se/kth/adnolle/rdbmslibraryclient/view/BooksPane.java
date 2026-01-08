@@ -9,17 +9,16 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import java.sql.Date;
-import java.util.List;
-import java.util.Optional;
-
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.util.Pair;
 import se.kth.adnolle.rdbmslibraryclient.model.Author;
 import se.kth.adnolle.rdbmslibraryclient.model.Book;
 import se.kth.adnolle.rdbmslibraryclient.model.Genre;
 import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
+
+import java.sql.Date;
+import java.util.List;
+import java.util.Optional;
 
 public class BooksPane extends VBox {
 
@@ -32,9 +31,13 @@ public class BooksPane extends VBox {
     private MenuBar menuBar;
     private Circle connectionIndicator;
 
-    public BooksPane() { this.init(); }
+    public BooksPane() {
+        this.init();
+    }
 
-    public void setViewListener(IViewListener controller) { this.controller = controller; }
+    public void setViewListener(IViewListener controller) {
+        this.controller = controller;
+    }
 
     public void showAlertAndWait(String msg, Alert.AlertType type) {
         // types: INFORMATION, WARNING et c.
@@ -49,11 +52,10 @@ public class BooksPane extends VBox {
         alert.showAndWait();
     }
 
-    public void setConnectionIndicator (boolean isConnected) {
-        if(isConnected) {
+    public void setConnectionIndicator(boolean isConnected) {
+        if (isConnected) {
             connectionIndicator.setFill(Color.GREEN);
-        }
-        else connectionIndicator.setFill(Color.RED);
+        } else connectionIndicator.setFill(Color.RED);
     }
 
     public void displayBooks(List<Book> result) {

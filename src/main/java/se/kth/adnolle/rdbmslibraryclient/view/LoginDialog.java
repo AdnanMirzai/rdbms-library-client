@@ -4,8 +4,6 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.util.Pair;
-import java.util.Optional;
 
 public class LoginDialog extends Dialog<LoginCredentials> {
 

@@ -10,16 +10,18 @@ import java.io.IOException;
  * do not need to know what specific types of exceptions are thrown form the underlying implementation.
  * Example, code in the _implementation_ of som method in BooksDbInterface:
  * try {
- *     ...
+ * ...
  * }
  * catch(SQLException/MongoDbException e) { // depends on specific implementation
- *     // wrap in BooksDbException and throw again
- *     throw new BooksDbException(e.getMessage(), e);
+ * // wrap in BooksDbException and throw again
+ * throw new BooksDbException(e.getMessage(), e);
  * }
  */
 public class ConnectionException extends IOException {
 
-    public ConnectionException(String message, Exception cause) { super(message, cause); }
+    public ConnectionException(String message, Exception cause) {
+        super(message, cause);
+    }
 
     public ConnectionException(String message) {
         super(message);

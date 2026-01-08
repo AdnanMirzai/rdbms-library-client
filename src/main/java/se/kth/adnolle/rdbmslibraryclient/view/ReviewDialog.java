@@ -4,7 +4,6 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.util.Pair;
 
 public class ReviewDialog extends Dialog<ReviewData> {
 

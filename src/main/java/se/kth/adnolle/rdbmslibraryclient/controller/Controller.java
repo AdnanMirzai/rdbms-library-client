@@ -1,18 +1,21 @@
 package se.kth.adnolle.rdbmslibraryclient.controller;
 
-import static javafx.scene.control.Alert.AlertType.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import javafx.application.Platform;
-import javafx.util.Pair;
 import se.kth.adnolle.rdbmslibraryclient.model.*;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
+import se.kth.adnolle.rdbmslibraryclient.model.exceptions.ConnectionException;
+import se.kth.adnolle.rdbmslibraryclient.model.exceptions.InsertException;
+import se.kth.adnolle.rdbmslibraryclient.model.exceptions.LoginException;
+import se.kth.adnolle.rdbmslibraryclient.model.exceptions.SelectException;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
 import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 import se.kth.adnolle.rdbmslibraryclient.view.LoginCredentials;
 import se.kth.adnolle.rdbmslibraryclient.view.ReviewData;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static javafx.scene.control.Alert.AlertType.*;
 
 
 /**
@@ -27,6 +30,7 @@ import se.kth.adnolle.rdbmslibraryclient.view.ReviewData;
  *
  * <p><b>Exception Handling:</b>
  * Exceptions thrown by the model are caught within the background tasks. Error messages are displayed to the user via the View.</p>
+ *
  * @author adnolle@kth.se
  */
 public class Controller implements IViewListener {
@@ -49,12 +53,13 @@ public class Controller implements IViewListener {
      * Initiates search for books.
      * <p>This method creates a new background thread to query the database.
      * If a {@link SelectException} occurs, an error alert is shown.</p>
+     *
      * @param searchFor The search string.
-     * @param mode The search criterion (Title, ISBN, etc.).
+     * @param mode      The search criterion (Title, ISBN, etc.).
      */
     @Override
     public void onSearchSelected(String searchFor, SearchMode mode) {
-        if(!isDBConnected()) {
+        if (!isDBConnected()) {
             view.showAlertAndWait("Not connected to database!", INFORMATION);
             return;
         }
@@ -78,7 +83,7 @@ public class Controller implements IViewListener {
                     };
                 }
 
-                if(result == null || result.isEmpty()) {
+                if (result == null || result.isEmpty()) {
                     Platform.runLater(() -> {
                         view.showAlertAndWait("No results found.", INFORMATION);
                         view.displayBooks(new ArrayList<>());
@@ -86,8 +91,7 @@ public class Controller implements IViewListener {
                 } else {
                     Platform.runLater(() -> view.displayBooks(result));
                 }
-            }
-            catch (SelectException e) {
+            } catch (SelectException e) {
                 Platform.runLater(() -> view.showAlertAndWait("Database fetch data error: " + e.getMessage(), ERROR));
             }
         };
@@ -103,7 +107,7 @@ public class Controller implements IViewListener {
     @Override
     public void onConnectSelected() {
         try {
-            if(database.connect("LibraryDB", "DB_clientApp", "ABC.123")) {
+            if (database.connect("LibraryDB", "DB_clientApp", "ABC.123")) {
                 view.showAlertAndWait("Connected!", INFORMATION);
                 view.setConnectionIndicator(true);
             }
@@ -173,7 +177,7 @@ public class Controller implements IViewListener {
             return;
         }
 
-        if(!isDBConnected()) {
+        if (!isDBConnected()) {
             view.showAlertAndWait("Not connected to database!", INFORMATION);
             return;
         }
@@ -183,7 +187,7 @@ public class Controller implements IViewListener {
                 List<Genre> genres = database.getAllGenres();
                 Platform.runLater(() -> {
                     Optional<Book> createdBook = view.showAddBookDialog(authors, genres);
-                    if(createdBook.isPresent())
+                    if (createdBook.isPresent())
                         addBookToDB(createdBook.get());
                 });
             } catch (SelectException e) {
@@ -210,6 +214,7 @@ public class Controller implements IViewListener {
      * Handles the process of rating a selected book.
      * Displays a dialog for rating input,
      * then creates a background thread to perform the update in the database.
+     *
      * @param selectedBook The selected book to be rated.
      */
     @Override
@@ -219,12 +224,12 @@ public class Controller implements IViewListener {
             return;
         }
 
-        if(!isDBConnected()) {
+        if (!isDBConnected()) {
             view.showAlertAndWait("Not connected to database!", INFORMATION);
             return;
         }
 
-        if(selectedBook != null) {
+        if (selectedBook != null) {
             Optional<ReviewData> result = view.showReviewDialog(selectedBook);
 
             result.ifPresent(review -> {
@@ -239,16 +244,14 @@ public class Controller implements IViewListener {
                             onSearchSelected(lastSearchTerm, lastSearchMode);
                             view.showAlertAndWait("Review submitted!", INFORMATION);
                         });
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         Platform.runLater(() -> view.showAlertAndWait("Database error: " + e.getMessage(), ERROR));
                     }
                 };
                 Thread rateWorker = new Thread(task);
                 rateWorker.start();
             });
-        }
-        else view.showAlertAndWait("Select a book to rate", INFORMATION);
+        } else view.showAlertAndWait("Select a book to rate", INFORMATION);
     }
 
     /**
@@ -258,7 +261,7 @@ public class Controller implements IViewListener {
     @Override
     public void onExitSelected() {
         try {
-            if(database != null) database.disconnect();
+            if (database != null) database.disconnect();
         } catch (ConnectionException e) {
             view.showAlertAndWait("Failed to disconnect from database: " + e.getMessage(), ERROR);
         } finally {
@@ -269,25 +272,26 @@ public class Controller implements IViewListener {
     /**
      * Displays detailed information about the authors of the selected book.
      * Works on the existing data in the Book object and does not require a DB query.
+     *
      * @param selectedBook The selected book to show author details for.
      */
     @Override
     public void onAuthorDetailsSelected(Book selectedBook) {
-        if(selectedBook != null && !selectedBook.getAuthors().isEmpty()) {
+        if (selectedBook != null && !selectedBook.getAuthors().isEmpty()) {
             List<Author> authors = selectedBook.getAuthors();
             StringBuilder builder = new StringBuilder();
-            for(Author author : authors) {
+            for (Author author : authors) {
                 builder.append(author.toString()).append("\n\n");
             }
             String headerInfo = "'" + selectedBook.getTitle() + "'" + " Authors:";
             view.showAlertAndWait(builder.toString(), INFORMATION, "Author Information", headerInfo);
-        }
-        else view.showAlertAndWait("No book selected", ERROR);
+        } else view.showAlertAndWait("No book selected", ERROR);
     }
 
     /**
      * Checks if the database connection is active.
      * catches {@link ConnectionException} and alerts the user if the check fails.
+     *
      * @return true if connected, else false.
      */
     private boolean isDBConnected() {

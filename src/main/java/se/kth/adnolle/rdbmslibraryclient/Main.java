@@ -6,7 +6,6 @@ import javafx.stage.Stage;
 import se.kth.adnolle.rdbmslibraryclient.controller.Controller;
 import se.kth.adnolle.rdbmslibraryclient.model.IBooksDb;
 import se.kth.adnolle.rdbmslibraryclient.model.MongoDbImpl;
-import se.kth.adnolle.rdbmslibraryclient.model.MySQLImpl;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
 import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 

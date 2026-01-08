@@ -39,8 +39,8 @@ public class AddBookDialog extends Dialog<Book> {
 
         titleField = new TextField();
         titleField.setPromptText("Book title");
-        grid.add(new Label("Title"), 0,0);
-        grid.add(titleField, 1,0);
+        grid.add(new Label("Title"), 0, 0);
+        grid.add(titleField, 1, 0);
 
         isbnField = new TextField();
         isbnField.setPromptText("13 digits");
@@ -49,25 +49,25 @@ public class AddBookDialog extends Dialog<Book> {
 
         publishedField = new DatePicker();
         publishedField.setValue(LocalDate.now());
-        grid.add(new Label("Published:"),0,2);
+        grid.add(new Label("Published:"), 0, 2);
         grid.add(publishedField, 1, 2);
 
         storyLineArea = new TextArea();
         storyLineArea.setPromptText("StoryLine");
         storyLineArea.setPrefRowCount(3);
-        grid.add(new Label("Story:"),0,3);
-        grid.add(storyLineArea,1,3);
+        grid.add(new Label("Story:"), 0, 3);
+        grid.add(storyLineArea, 1, 3);
 
         ratingBox = new ComboBox<>();
-        ratingBox.getItems().addAll(null, 1,2,3,4,5);
+        ratingBox.getItems().addAll(null, 1, 2, 3, 4, 5);
         ratingBox.setValue(null);
-        grid.add(new Label("Rating:"), 0,4);
-        grid.add(ratingBox, 1,4);
+        grid.add(new Label("Rating:"), 0, 4);
+        grid.add(ratingBox, 1, 4);
 
         Label authorsLabel = new Label("Select Authors:");
         VBox authorsBox = new VBox(5);
         authorCheckBox = new ArrayList<>();
-        for(Author author : authors) {
+        for (Author author : authors) {
             CheckBox cb = new CheckBox(author.getName());
             cb.setUserData(author);
             authorCheckBox.add(cb);
@@ -130,7 +130,7 @@ public class AddBookDialog extends Dialog<Book> {
         boolean validTitle = !titleField.getText().trim().isEmpty();
         boolean validAuthor = authorCheckBox.stream().anyMatch(CheckBox::isSelected);
         boolean validGenre = genreCheckBox.stream().anyMatch(CheckBox::isSelected);
-        addButton.setDisable(!validTitle||!validGenre||!validAuthor||!validISBN);
+        addButton.setDisable(!validTitle || !validGenre || !validAuthor || !validISBN);
     }
 
     private Book createBookFromInput() {

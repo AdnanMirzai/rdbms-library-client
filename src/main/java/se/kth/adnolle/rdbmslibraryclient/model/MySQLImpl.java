@@ -1,18 +1,26 @@
 package se.kth.adnolle.rdbmslibraryclient.model;
 
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
+
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MySQLImpl implements IBooksDb {
+    // BASE QUERY: Calculates Average Rating on the fly
+    // We use LEFT JOIN so books without reviews still show up (rating will be 0 or null)
+    private static final String BASE_SELECT =
+            "SELECT B.bookId, B.isbn, B.title, B.published, B.storyLine, " +
+                    "ROUND(AVG(R.rating)) as rating " +
+                    "FROM T_Book B " +
+                    "LEFT JOIN T_Review R ON B.bookId = R.bookId ";
+    private static final String GROUP_BY = " GROUP BY B.bookId";
     private Connection connection;
 
     @Override
     public boolean connect(String database, String username, String password) throws ConnectionException {
         try {
-            if(connection != null && !connection.isClosed()) return true;
+            if (connection != null && !connection.isClosed()) return true;
         } catch (SQLException e) {
             throw new ConnectionException(e.getMessage());
         }
@@ -48,10 +56,10 @@ public class MySQLImpl implements IBooksDb {
 
     @Override
     public void disconnect() throws ConnectionException {
-        if(connection != null) {
+        if (connection != null) {
             try {
                 connection.close();
-            } catch(SQLException e) {
+            } catch (SQLException e) {
                 throw new ConnectionException(e.getMessage());
             }
         }
@@ -59,25 +67,14 @@ public class MySQLImpl implements IBooksDb {
 
     @Override
     public boolean isConnected() throws ConnectionException {
-        if(connection != null) {
+        if (connection != null) {
             try {
                 return !connection.isClosed();
             } catch (SQLException e) {
                 throw new ConnectionException(e.getMessage());
             }
-        }
-        else return false;
+        } else return false;
     }
-
-    // BASE QUERY: Calculates Average Rating on the fly
-    // We use LEFT JOIN so books without reviews still show up (rating will be 0 or null)
-    private static final String BASE_SELECT =
-            "SELECT B.bookId, B.isbn, B.title, B.published, B.storyLine, " +
-                    "ROUND(AVG(R.rating)) as rating " +
-                    "FROM T_Book B " +
-                    "LEFT JOIN T_Review R ON B.bookId = R.bookId ";
-
-    private static final String GROUP_BY = " GROUP BY B.bookId";
 
     @Override
     public List<Book> getAllBooks() throws SelectException {
@@ -152,12 +149,11 @@ public class MySQLImpl implements IBooksDb {
         } catch (SQLException e) {
             try {
                 connection.rollback();
-            } catch(SQLException re) {
+            } catch (SQLException re) {
                 throw new InsertException(re.getMessage());
             }
             throw new InsertException(e.getMessage());
-        }
-        finally {
+        } finally {
             try {
                 connection.setAutoCommit(true);
             } catch (SQLException ae) {
@@ -190,7 +186,7 @@ public class MySQLImpl implements IBooksDb {
         String sql = "SELECT * FROM T_Author";
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-            while(rs.next()) {
+            while (rs.next()) {
                 int auId = rs.getInt("auId");
                 String name = rs.getString("name");
                 Date DOB = rs.getDate("dob");
@@ -209,7 +205,7 @@ public class MySQLImpl implements IBooksDb {
         String sql = "SELECT * FROM T_Genre";
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-            while(rs.next()) {
+            while (rs.next()) {
                 int genreId = rs.getInt("genreId");
                 String genre = rs.getString("genre");
                 genres.add(new Genre(genreId, genre));
@@ -229,7 +225,7 @@ public class MySQLImpl implements IBooksDb {
                         "WHERE BA.bookId = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1,bookId);
+            stmt.setInt(1, bookId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     int id = rs.getInt("auId");
@@ -251,7 +247,7 @@ public class MySQLImpl implements IBooksDb {
                         "WHERE BG.bookId = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1,bookId);
+            stmt.setInt(1, bookId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     int id = rs.getInt("genreId");
@@ -302,7 +298,7 @@ public class MySQLImpl implements IBooksDb {
     private List<Book> executeQuery(String sql, String parameter) throws SelectException {
         List<Book> books = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            if(parameter != null) stmt.setString(1, parameter);
+            if (parameter != null) stmt.setString(1, parameter);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {

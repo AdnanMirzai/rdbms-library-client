@@ -9,6 +9,11 @@ public class User {
         this.username = username;
     }
 
-    public int getUserId() { return userId; }
-    public String getUsername() { return username; }
+    public int getUserId() {
+        return userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
 }

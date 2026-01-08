@@ -21,10 +21,13 @@ public class Genre {
     public int getGenreId() {
         return genreId;
     }
+
     public String getGenre() {
         return genre;
     }
 
     @Override
-    public String toString() { return genre; }
+    public String toString() {
+        return genre;
+    }
 }

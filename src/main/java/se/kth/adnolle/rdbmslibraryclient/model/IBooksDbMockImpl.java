@@ -9,17 +9,12 @@
  * and open the template in the editor.
  */
 
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
-import java.sql.Date;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * A mock implementation of the IBooksDB interface to demonstrate how to
  * use it together with the user interface.
  * <p>
  * Your implementation must access a real database.
+ *
  * @author anderslm@kth.se
  */
 /*/
