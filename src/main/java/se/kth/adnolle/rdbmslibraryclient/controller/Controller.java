@@ -275,7 +275,7 @@ public class Controller implements IViewListener {
      *
      * @param selectedBook The selected book to show author details for.
      */
-    @Override
+    /*@Override
     public void onAuthorDetailsSelected(Book selectedBook) {
         if (selectedBook != null && !selectedBook.getAuthors().isEmpty()) {
             List<Author> authors = selectedBook.getAuthors();
@@ -286,7 +286,7 @@ public class Controller implements IViewListener {
             String headerInfo = "'" + selectedBook.getTitle() + "'" + " Authors:";
             view.showAlertAndWait(builder.toString(), INFORMATION, "Author Information", headerInfo);
         } else view.showAlertAndWait("No book selected", ERROR);
-    }
+    }*/
 
     /**
      * Checks if the database connection is active.
@@ -301,5 +301,32 @@ public class Controller implements IViewListener {
             view.showAlertAndWait(e.getMessage(), ERROR);
         }
         return false;
+    }
+
+    /**
+     * Called when double-clicking a book row.
+     * Fetches reviews asynchronously and shows the Details Dialog (reviews and author info).
+     */
+    @Override
+    public void onBookDetailsSelected(Book selectedBook) {
+        if(selectedBook == null) return;
+
+        if(!isDBConnected()) {
+            view.showAlertAndWait("Not connected to database. Cannot fetch reviews.", ERROR);
+            return;
+        }
+
+        Runnable task = () -> {
+            try {
+                List<Review> reviews = database.getReviewsForBook(selectedBook.getBookId());
+
+                Platform.runLater(() -> {
+                    view.showBookDetails(selectedBook, reviews);
+                });
+            } catch (SelectException e) {
+                Platform.runLater(() -> view.showAlertAndWait("Failed to load details: " + e.getMessage(), ERROR));
+            }
+        };
+        new Thread(task).start();
     }
 }

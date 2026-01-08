@@ -15,6 +15,8 @@ import java.util.List;
  */
 public interface IBooksDb {
 
+    List<Review> getReviewsForBook(int bookId) throws SelectException;
+
     /**
      * Connect to the database.
      *

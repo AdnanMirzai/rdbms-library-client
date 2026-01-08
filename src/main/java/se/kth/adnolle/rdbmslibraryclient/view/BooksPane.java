@@ -11,10 +11,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import se.kth.adnolle.rdbmslibraryclient.model.Author;
-import se.kth.adnolle.rdbmslibraryclient.model.Book;
-import se.kth.adnolle.rdbmslibraryclient.model.Genre;
-import se.kth.adnolle.rdbmslibraryclient.model.SearchMode;
+import se.kth.adnolle.rdbmslibraryclient.model.*;
 
 import java.sql.Date;
 import java.util.List;
@@ -81,7 +78,6 @@ public class BooksPane extends VBox {
         searchModeBox.setValue(SearchMode.Title);
         searchButton = new Button("Search");
 
-        // event handling (dispatch to controller)
         searchButton.setOnAction(_ -> {
             String searchFor = searchField.getText();
             SearchMode mode = searchModeBox.getValue();
@@ -91,40 +87,42 @@ public class BooksPane extends VBox {
 
     private void initBooksTable() {
         booksTable = new TableView<>();
-        booksTable.setEditable(false); // don't allow user updates (yet)
+        booksTable.setEditable(false);
         booksTable.setPlaceholder(new Label("No rows to display"));
 
-        // define columns
+        booksTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
         TableColumn<Book, String> titleCol = new TableColumn<>("Title");
         TableColumn<Book, String> isbnCol = new TableColumn<>("ISBN");
         TableColumn<Book, Date> publishedCol = new TableColumn<>("Published");
-        TableColumn<Book, Integer> ratingCol = new TableColumn<>("Rating");
+        TableColumn<Book, Integer> ratingCol = new TableColumn<>("Average Rating");
         TableColumn<Book, List<Genre>> genreCol = new TableColumn<>("Genres");
+        TableColumn<Book, String> addedByCol = new TableColumn<>("Added By");
 
-        //noinspection unchecked
-        booksTable.getColumns().addAll(titleCol, isbnCol, publishedCol, ratingCol, genreCol);
-        // give title column some extra space
-        titleCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.3));
-        isbnCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.2));
-        genreCol.prefWidthProperty().bind(booksTable.widthProperty().multiply(0.3));
+        ratingCol.setMinWidth(110); ratingCol.setMaxWidth(110);
+        publishedCol.setMinWidth(90); publishedCol.setMaxWidth(90);
+        isbnCol.setMinWidth(110); isbnCol.setMaxWidth(130);
+        addedByCol.setMinWidth(100); addedByCol.setMaxWidth(120);
 
-        // define how to fill data for each cell,
-        // get values from Book properties
+        titleCol.setMaxWidth(Double.MAX_VALUE);
+        genreCol.setMaxWidth(Double.MAX_VALUE);
+
+        booksTable.getColumns().addAll(titleCol, isbnCol, publishedCol, ratingCol, genreCol, addedByCol);
+
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
         isbnCol.setCellValueFactory(new PropertyValueFactory<>("isbn"));
         publishedCol.setCellValueFactory(new PropertyValueFactory<>("published"));
         ratingCol.setCellValueFactory(new PropertyValueFactory<>("rating"));
         genreCol.setCellValueFactory(new PropertyValueFactory<>("genres"));
+        addedByCol.setCellValueFactory(new PropertyValueFactory<>("addedByName"));
 
-        // When double-click on row, show books author details
         booksTable.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2 && !booksTable.getSelectionModel().isEmpty()) {
                 Book selectedBook = booksTable.getSelectionModel().getSelectedItem();
-                controller.onAuthorDetailsSelected(selectedBook);
+                controller.onBookDetailsSelected(selectedBook);
             }
         });
 
-        // associate the table view with the data
         booksTable.setItems(booksInTable);
     }
 
@@ -153,9 +151,6 @@ public class BooksPane extends VBox {
 
         menuBar = new MenuBar();
         menuBar.getMenus().addAll(fileMenu, manageMenu, statusMenu, userMenu);
-
-
-        menuBar.getMenus().add(1, userMenu);
 
         exitItem.setOnAction(_ -> controller.onExitSelected());
         connectItem.setOnAction(_ -> controller.onConnectSelected());
@@ -196,6 +191,11 @@ public class BooksPane extends VBox {
     public Optional<LoginCredentials> showLoginDialog() {
         LoginDialog dialog = new LoginDialog();
         return dialog.showAndWait();
+    }
+
+    public void showBookDetails(Book book, List<Review> reviews) {
+        BookDetailsDialog dialog = new BookDetailsDialog(book, reviews);
+        dialog.showAndWait();
     }
 
 }

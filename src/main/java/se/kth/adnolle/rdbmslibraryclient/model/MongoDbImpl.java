@@ -24,6 +24,35 @@ public class MongoDbImpl implements IBooksDb {
     private MongoCollection<Document> reviewCollection;
 
     @Override
+    public List<Review> getReviewsForBook(int bookId) throws SelectException {
+        List<Review> reviews = new ArrayList<>();
+        try {
+            Bson filter = Filters.eq("bookId", bookId);
+            try (MongoCursor<Document> cursor = reviewCollection.find(filter).iterator()) {
+                while (cursor.hasNext()) {
+                    Document doc = cursor.next();
+
+                    int userId = doc.getInteger("userId");
+                    int rating = doc.getInteger("rating");
+                    String text = doc.getString("reviewText");
+                    Date date = new Date(doc.getDate("reviewDate").getTime());
+
+                    String username = "Unknown";
+                    Document userDoc = userCollection.find(Filters.eq("_id", userId)).first();
+                    if(userDoc != null) {
+                        username = userDoc.getString("username");
+                    }
+
+                    reviews.add(new Review(username, date, rating, text));
+                }
+            }
+        } catch (MongoException e) {
+            throw new SelectException(e.getMessage());
+        }
+        return reviews;
+    }
+
+    @Override
     public boolean connect(String databaseName, String userName, String password) throws ConnectionException {
         if (client != null) return true;
 
@@ -197,13 +226,24 @@ public class MongoDbImpl implements IBooksDb {
                 .append("title", book.getTitle())
                 .append("published", book.getPublished())
                 .append("storyLine", book.getStoryLine())
-                .append("rating", null)
+                .append("rating", book.getRating())
                 .append("authorIds", authorIds)
                 .append("genreIds", genreIds)
                 .append("addedBy", addedBy);
 
         try {
             bookCollection.insertOne(newBook);
+
+            if (book.getRating() > 0) {
+                Document reviewDoc = new Document()
+                        .append("bookId", bookId)
+                        .append("userId", addedBy)
+                        .append("rating", book.getRating())
+                        .append("reviewText", "")
+                        .append("reviewDate", new Date());
+
+                reviewCollection.insertOne(reviewDoc);
+            }
         } catch (MongoException e) {
             throw new InsertException(e.getMessage());
         }
@@ -273,12 +313,21 @@ public class MongoDbImpl implements IBooksDb {
         java.sql.Date published = (utilDate != null) ? new java.sql.Date(utilDate.getTime()) : null;
         String storyLine = doc.getString("storyLine");
         Integer rating = doc.getInteger("rating");
+        Integer addedById = doc.getInteger("addedBy");
+        String addedByName = "Unknown";
+
+        if (addedById != null) {
+            Document userDoc = userCollection.find(Filters.eq("_id", addedById)).first();
+            if (userDoc != null) {
+                addedByName = userDoc.getString("username");
+            }
+        }
 
         List<Integer> authorIds = doc.getList("authorIds", Integer.class);
         List<Integer> genreIds = doc.getList("genreIds", Integer.class);
         List<Author> authors = getAuthorsForBook(authorIds);
         List<Genre> genres = getGenresForBook(genreIds);
-        return new Book(bookId, isbn, title, published, storyLine, rating, authors, genres);
+        return new Book(bookId, isbn, title, published, storyLine, rating, authors, genres, addedByName);
     }
 
     /**

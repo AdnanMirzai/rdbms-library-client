@@ -59,8 +59,8 @@ public class AddBookDialog extends Dialog<Book> {
         grid.add(storyLineArea, 1, 3);
 
         ratingBox = new ComboBox<>();
-        ratingBox.getItems().addAll(null, 1, 2, 3, 4, 5);
-        ratingBox.setValue(null);
+        ratingBox.getItems().addAll(1, 2, 3, 4, 5);
+        ratingBox.setValue(3);
         grid.add(new Label("Rating:"), 0, 4);
         grid.add(ratingBox, 1, 4);
 
@@ -154,7 +154,7 @@ public class AddBookDialog extends Dialog<Book> {
                 selectedGenres.add((Genre) cb.getUserData());
             }
         }
-        return new Book(isbn, title, published, storyLine, rating, selectedAuthors, selectedGenres);
+        return new Book(isbn, title, published, storyLine, rating, selectedAuthors, selectedGenres, "");
     }
 
     public List<Author> getSelectedAuthors() {

@@ -19,9 +19,10 @@ public class Book {
     private final Integer rating;
     private final List<Author> authors;
     private final List<Genre> genres;
+    private final String addedByName;
 
     public Book(int bookId, String isbn, String title, Date published,
-                String storyLine, Integer rating, List<Author> authors, List<Genre> genres) throws IllegalArgumentException {
+                String storyLine, Integer rating, List<Author> authors, List<Genre> genres, String addedByName) throws IllegalArgumentException {
 
         if (!isbn.matches("\\d{13}")) throw new IllegalArgumentException();
         this.bookId = bookId;
@@ -32,14 +33,17 @@ public class Book {
         this.rating = rating;
         this.authors = authors;
         this.genres = genres;
+        this.addedByName = addedByName;
     }
 
     // ID will be assigned by DB.
-    public Book(String isbn, String title, Date published, String storyLine, Integer rating, List<Author> authors, List<Genre> genres) {
-        this(-1, isbn, title, published, storyLine, rating, authors, genres);
+    public Book(String isbn, String title, Date published, String storyLine, Integer rating, List<Author> authors, List<Genre> genres, String addedByName) {
+        this(-1, isbn, title, published, storyLine, rating, authors, genres, addedByName);
     }
 
     // Getters
+    public String getAddedByName() { return addedByName; }
+
     public int getBookId() {
         return bookId;
     }

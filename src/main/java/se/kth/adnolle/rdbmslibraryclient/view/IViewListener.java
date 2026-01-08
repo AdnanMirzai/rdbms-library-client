@@ -34,7 +34,7 @@ public interface IViewListener {
      *
      * @param selectedBook The Book to get authors for.
      */
-    void onAuthorDetailsSelected(Book selectedBook);
+    void onBookDetailsSelected(Book selectedBook);
 
     /**
      * Called when the user wants to add a new book to DB.

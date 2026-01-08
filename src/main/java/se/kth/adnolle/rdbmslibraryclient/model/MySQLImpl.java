@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MySQLImpl implements IBooksDb {
-    // BASE QUERY: Calculates Average Rating on the fly
-    // We use LEFT JOIN so books without reviews still show up (rating will be 0 or null)
     private static final String BASE_SELECT =
             "SELECT B.bookId, B.isbn, B.title, B.published, B.storyLine, " +
                     "ROUND(AVG(R.rating)) as rating " +
@@ -16,6 +14,11 @@ public class MySQLImpl implements IBooksDb {
                     "LEFT JOIN T_Review R ON B.bookId = R.bookId ";
     private static final String GROUP_BY = " GROUP BY B.bookId";
     private Connection connection;
+
+    @Override
+    public List<Review> getReviewsForBook(int bookId) throws SelectException {
+        return List.of();
+    }
 
     @Override
     public boolean connect(String database, String username, String password) throws ConnectionException {
@@ -265,12 +268,14 @@ public class MySQLImpl implements IBooksDb {
         String title = rs.getString("title");
         Date published = rs.getDate("published");
         String storyLine = rs.getString("storyLine");
-        // This 'rating' now comes from the calculated field in the SQL query
         int rating = rs.getInt("rating");
+        String addedByName = rs.getString("addedBy");
+        if (rs.wasNull()) addedByName = "Unknown";
+
         List<Author> authors = getAuthorsForBook(bookId);
         List<Genre> genres = getGenresForBook(bookId);
 
-        return new Book(bookId, isbn, title, published, storyLine, rating, authors, genres);
+        return new Book(bookId, isbn, title, published, storyLine, rating, authors, genres, addedByName);
     }
 
     private void addBookAuthor(List<Author> authors, int bookId) throws SQLException {
