@@ -60,4 +60,9 @@ public interface IViewListener {
      * Called when the user wants logout.
      */
     void onLogoutSelected();
+
+    /**
+     * Called when the user wants to delete a book.
+     */
+    void onRemoveBookSelected();
 }

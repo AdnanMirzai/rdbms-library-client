@@ -2,10 +2,7 @@ package se.kth.adnolle.rdbmslibraryclient.controller;
 
 import javafx.application.Platform;
 import se.kth.adnolle.rdbmslibraryclient.model.*;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.ConnectionException;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.InsertException;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.LoginException;
-import se.kth.adnolle.rdbmslibraryclient.model.exceptions.SelectException;
+import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
 import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
 import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
 import se.kth.adnolle.rdbmslibraryclient.view.LoginCredentials;
@@ -202,6 +199,7 @@ public class Controller implements IViewListener {
         Runnable task2 = () -> {
             try {
                 database.addBook(createdBook, createdBook.getAuthors(), createdBook.getGenres(), currentUser.getUserId());
+                onSearchSelected(lastSearchTerm, lastSearchMode);
             } catch (InsertException e) {
                 Platform.runLater(() -> view.showAlertAndWait("Database insert error: " + e.getMessage(), ERROR));
             }
@@ -328,5 +326,42 @@ public class Controller implements IViewListener {
             }
         };
         new Thread(task).start();
+    }
+
+    @Override
+    public void onRemoveBookSelected() {
+        if (currentUser == null) {
+            view.showAlertAndWait("You must be logged in to delete books.", WARNING);
+            return;
+        }
+
+        if (!isDBConnected()) {
+            view.showAlertAndWait("Not connected to database!", ERROR);
+        }
+
+        Book selectedBook = view.getSelectedBook();
+
+        if(selectedBook == null) {
+            view.showAlertAndWait("Please select a book to delete", INFORMATION);
+            return;
+        }
+
+        boolean confirmed = view.showConfirmation("Delete Book",
+                "Are you sure you want to delete '" + selectedBook.getTitle() + "'\nThis cannot be undone");
+
+        if (confirmed) {
+            Runnable task = () -> {
+                try {
+                    database.deleteBook(selectedBook.getBookId());
+                    Platform.runLater(() -> {
+                        view.showAlertAndWait("Book deleted succesfully.", INFORMATION);
+                        onSearchSelected(lastSearchTerm, lastSearchMode);
+                    });
+                } catch (DeleteException e) {
+                    Platform.runLater(() -> view.showAlertAndWait("Deletion failed" + e.getMessage(), ERROR));
+                }
+            };
+            new Thread(task).start();
+        }
     }
 }

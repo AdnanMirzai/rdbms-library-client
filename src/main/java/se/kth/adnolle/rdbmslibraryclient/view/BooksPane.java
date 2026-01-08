@@ -155,6 +155,7 @@ public class BooksPane extends VBox {
         exitItem.setOnAction(_ -> controller.onExitSelected());
         connectItem.setOnAction(_ -> controller.onConnectSelected());
         disconnectItem.setOnAction(_ -> controller.onDisconnectSelected());
+        removeItem.setOnAction(_ -> controller.onRemoveBookSelected());
 
         loginItem.setOnAction(_ -> controller.onLoginSelected());
         logoutItem.setOnAction(_ -> controller.onLogoutSelected());
@@ -198,4 +199,17 @@ public class BooksPane extends VBox {
         dialog.showAndWait();
     }
 
+    public boolean showConfirmation(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == ButtonType.OK;
+    }
+
+    public Book getSelectedBook() {
+        return booksTable.getSelectionModel().getSelectedItem();
+    }
 }
