@@ -265,6 +265,28 @@ public class MongoDbImpl implements IBooksDb {
         return authors;
     }
 
+    /**
+     * @param doc BSON Document from authors collection.
+     * @return An Author object.
+     */
+    private Author convertToAuthor(Document doc) {
+        int auId = doc.getInteger("_id");
+        String name = doc.getString("name");
+        Date utilDOB = doc.getDate("dob");
+        java.sql.Date DOB = (utilDOB != null) ? new java.sql.Date(utilDOB.getTime()) : null;
+        Integer addedById = doc.getInteger("addedBy");
+        String addedByName = "Unknown";
+
+        if (addedById != null) {
+            Document userDoc = userCollection.find(Filters.eq("_id", addedById)).first();
+            if (userDoc != null) {
+                addedByName = userDoc.getString("username");
+            }
+        }
+
+        return new Author(auId, name, DOB, addedByName);
+    }
+
     @Override
     public List<Genre> getAllGenres() throws SelectException {
         List<Genre> genres = new ArrayList<>();
@@ -364,18 +386,6 @@ public class MongoDbImpl implements IBooksDb {
     }
 
     /**
-     * @param doc BSON Document from authors collection.
-     * @return An Author object.
-     */
-    private Author convertToAuthor(Document doc) {
-        int auId = doc.getInteger("_id");
-        String name = doc.getString("name");
-        Date utilDOB = doc.getDate("dob");
-        java.sql.Date DOB = (utilDOB != null) ? new java.sql.Date(utilDOB.getTime()) : null;
-        return new Author(auId, name, DOB);
-    }
-
-    /**
      * @param genreIds A list of integer genre IDs.
      * @return A list of Genre objects.
      * @throws MongoException If the database query fails.
@@ -436,9 +446,6 @@ public class MongoDbImpl implements IBooksDb {
 
         try {
             authorCollection.insertOne(newAuthor);
-            // CRITICAL: We must update the ID of the Java object so the View knows it exists
-            // We use reflection or a setter (if available), or we assume the Controller handles the ID assignment
-            // Since Author is likely immutable or missing a setAuId, we rely on the Controller to rebuild the object
         } catch (MongoException e) {
             throw new InsertException("Failed to add author: " + e.getMessage());
         }

@@ -12,15 +12,17 @@ public class Author {
     private final int auId;
     private final String name;
     private final Date DOB;
+    private final String addedByName;
 
-    public Author(int auId, String name, Date DOB) {
+    public Author(int auId, String name, Date DOB, String addedByName) {
         this.auId = auId;
         this.name = name;
         this.DOB = DOB;
+        this.addedByName = addedByName;
     }
 
-    public Author(String name, Date DOB) {
-        this(-1, name, DOB);
+    public Author(int auID, String name, Date DOB) {
+        this(-1, name, DOB, "");
     }
 
     public int getAuId() {
@@ -34,9 +36,13 @@ public class Author {
     public Date getDOB() {
         return DOB;
     }
+    public String getAddedByName() {
+        return addedByName;
+    }
 
     @Override
     public String toString() {
-        return "AuthorID: " + auId + "\nAuthor Name: " + name + "\nDate of birth: " + DOB;
+        String creator = (addedByName != null && !addedByName.isEmpty()) ? " (Added by: " + addedByName + ")" : "";
+        return name + creator;
     }
 }
