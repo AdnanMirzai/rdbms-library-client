@@ -137,4 +137,6 @@ public interface IBooksDb {
     List<Genre> getAllGenres() throws SelectException;
 
     void deleteBook(int bookId) throws DeleteException;
+
+    void addAuthor(Author author, int addedBy) throws InsertException;
 }

@@ -424,4 +424,23 @@ public class MongoDbImpl implements IBooksDb {
         }
         return books;
     }
+
+    @Override
+    public void addAuthor(Author author, int addedBy) throws InsertException {
+        int auId = getNextId("auId");
+
+        Document newAuthor = new Document("_id", auId)
+                .append("name", author.getName())
+                .append("dob", author.getDOB())
+                .append("addedBy", addedBy);
+
+        try {
+            authorCollection.insertOne(newAuthor);
+            // CRITICAL: We must update the ID of the Java object so the View knows it exists
+            // We use reflection or a setter (if available), or we assume the Controller handles the ID assignment
+            // Since Author is likely immutable or missing a setAuId, we rely on the Controller to rebuild the object
+        } catch (MongoException e) {
+            throw new InsertException("Failed to add author: " + e.getMessage());
+        }
+    }
 }

@@ -60,9 +60,15 @@ public class BooksPane extends VBox {
         booksInTable.addAll(result);
     }
 
-    public Optional<Book> showAddBookDialog(List<Author> authors, List<Genre> genres) {
+    public Optional<Book> showAddBookDialog(ObservableList<Author> authors, List<Genre> genres, Runnable onAddAuthor) {
         AddBookDialog addBookDialog = new AddBookDialog(authors, genres);
+        addBookDialog.setOnAddAuthor(onAddAuthor);
         return addBookDialog.showAndWait();
+    }
+
+    public Optional<Author> showAuthorDialog() {
+        AddAuthorDialog dialog = new AddAuthorDialog();
+        return dialog.showAndWait();
     }
 
     public Optional<ReviewData> showReviewDialog(Book selectedBook) {
@@ -211,5 +217,10 @@ public class BooksPane extends VBox {
 
     public Book getSelectedBook() {
         return booksTable.getSelectionModel().getSelectedItem();
+    }
+
+    public Optional<Author> showAddAuthorDialog() {
+        AddAuthorDialog dialog = new AddAuthorDialog();
+        return dialog.showAndWait();
     }
 }

@@ -1,12 +1,12 @@
 package se.kth.adnolle.rdbmslibraryclient.controller;
 
 import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import se.kth.adnolle.rdbmslibraryclient.model.*;
 import se.kth.adnolle.rdbmslibraryclient.model.exceptions.*;
-import se.kth.adnolle.rdbmslibraryclient.view.BooksPane;
-import se.kth.adnolle.rdbmslibraryclient.view.IViewListener;
-import se.kth.adnolle.rdbmslibraryclient.view.LoginCredentials;
-import se.kth.adnolle.rdbmslibraryclient.view.ReviewData;
+import se.kth.adnolle.rdbmslibraryclient.view.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -180,19 +180,41 @@ public class Controller implements IViewListener {
         }
         Runnable task = () -> {
             try {
-                List<Author> authors = database.getAllAuthors();
+                List<Author> authorList = database.getAllAuthors();
                 List<Genre> genres = database.getAllGenres();
+
+                ObservableList<Author> observableAuthors = FXCollections.observableArrayList(authorList);
+
                 Platform.runLater(() -> {
-                    Optional<Book> createdBook = view.showAddBookDialog(authors, genres);
-                    if (createdBook.isPresent())
-                        addBookToDB(createdBook.get());
+
+                    Runnable addAuthorLogic = () -> {
+                        Optional<Author> newAuthor = view.showAddAuthorDialog();
+                        newAuthor.ifPresent(auth -> {
+                            new Thread(() -> {
+                                try {
+                                    database.addAuthor(auth, currentUser.getUserId());
+
+                                    List<Author> refreshedList = database.getAllAuthors();
+                                    Platform.runLater(() -> {
+                                        observableAuthors.setAll(refreshedList);
+                                        view.showAlertAndWait("Author added!", INFORMATION);
+                                    });
+                                } catch (Exception e) {
+                                    Platform.runLater(() -> view.showAlertAndWait("Error: " + e.getMessage(), ERROR));
+                                }
+                            }).start();
+                        });
+                    };
+
+                    Optional<Book> result = view.showAddBookDialog(observableAuthors, genres, addAuthorLogic);
+                    result.ifPresent(this::addBookToDB);
                 });
+
             } catch (SelectException e) {
                 Platform.runLater(() -> view.showAlertAndWait("Database fetch error: " + e.getMessage(), ERROR));
             }
         };
-        Thread fetchWorker = new Thread(task);
-        fetchWorker.start();
+        new Thread(task).start();
     }
 
     private void addBookToDB(Book createdBook) {
