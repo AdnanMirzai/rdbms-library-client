@@ -1,10 +1,48 @@
 db = db.getSiblingDB('LibraryDB');
 
-// 1. Create Application User (Technical User)
+
+db.createRole({
+    role: "clientAppRole",
+    privileges: [
+        // BOOKS: Full control (Read, Add, Rate/Update, Delete)
+        {
+            resource: { db: "LibraryDB", collection: "books" },
+            actions: ["find", "insert", "update", "remove"]
+        },
+        // REVIEWS: Full control
+        {
+            resource: { db: "LibraryDB", collection: "reviews" },
+            actions: ["find", "insert", "update", "remove"]
+        },
+        // AUTHORS: Read and Add (No delete/update implemented in UI)
+        {
+            resource: { db: "LibraryDB", collection: "authors" },
+            actions: ["find", "insert"]
+        },
+        // GENRES: Read only (Client selects from list, never creates)
+        {
+            resource: { db: "LibraryDB", collection: "genres" },
+            actions: ["find"]
+        },
+        // USERS: Read only (For login check) - CLIENT CANNOT EDIT USERS
+        {
+            resource: { db: "LibraryDB", collection: "users" },
+            actions: ["find"]
+        },
+        // COUNTERS: Read and Update (for auto-increment) - No Delete/Insert
+        {
+            resource: { db: "LibraryDB", collection: "counters" },
+            actions: ["find", "update"]
+        }
+    ],
+    roles: []
+});
+
+//client user
 db.createUser({
     user: "DB_clientApp",
     pwd: "ABC.123",
-    roles: [{ role: "readWrite", db: "LibraryDB" }]
+    roles: [{ role: "clientAppRole", db: "LibraryDB" }]
 });
 
 // 2. Create Counters
